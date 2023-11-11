@@ -1,5 +1,7 @@
 package io.github.irishgreencitrus.sourgraves
 
+import net.kyori.adventure.key.Key
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import org.bukkit.Particle
 import org.bukkit.entity.ArmorStand
@@ -15,15 +17,15 @@ class SourGraveListener : Listener {
     fun onPlayerDeath(e: PlayerDeathEvent) {
         val inv = e.player.inventory
         if (inv.isEmpty) return
-
         val graveId = UUID.randomUUID()
+        e.player.sendMessage("${e.player.totalExperience} experience")
         e.drops.clear()
         val armourStand = e.player.world.spawnEntity(e.player.location.subtract(0.0,1.3,0.0), EntityType.ARMOR_STAND) as ArmorStand
         GraveHelper.makeGraveArmourStand(armourStand, graveId, e.player, message = e.deathMessage() ?: Component.text("${e.player.name} died"))
         SourGraves.plugin.graveHandler.addGrave(
             e.player,
             graveId,
-            inv.contents.toList())
+            GraveData(items = inv.contents.toList()))
     }
     @EventHandler
     fun onPlayerInteractAtEntity(e: PlayerInteractAtEntityEvent) {
@@ -32,11 +34,18 @@ class SourGraveListener : Listener {
         if (armourStand.hasMetadata("sour_grave_owner")) {
             val ownerUUID = UUID.fromString(armourStand.getMetadata("sour_grave_owner")[0].asString())
             if (ownerUUID == e.player.uniqueId) {
-                armourStand.world.spawnParticle(Particle.SOUL, armourStand.location, 100)
+                armourStand.world.spawnParticle(Particle.SOUL, armourStand.location.add(0.0,2.0,0.0), 1000)
+                e.player.playSound(Sound.sound(Key.key("minecraft:block.respawn_anchor.deplete"), Sound.Source.PLAYER, 1f, 1f))
                 armourStand.remove()
                 val graveUUID = UUID.fromString(armourStand.getMetadata("sour_grave_id")[0].asString())
+                val oldContents = e.player.inventory.contents.clone().filterNotNull()
+                val graveValue = SourGraves.plugin.graveHandler.removeGrave(e.player, graveUUID)!!
                 e.player.inventory.contents =
-                    SourGraves.plugin.graveHandler.removeGrave(e.player, graveUUID)?.toTypedArray()!!
+                    graveValue.items.toTypedArray()
+                val leftOvers = e.player.inventory.addItem(*oldContents.toTypedArray())
+                leftOvers.values.forEach {
+                    e.player.world.dropItemNaturally(e.player.location,it)
+                }
             }
         }
     }

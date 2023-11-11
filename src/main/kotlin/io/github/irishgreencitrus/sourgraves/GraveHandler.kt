@@ -7,16 +7,16 @@ import java.util.*
 import kotlin.collections.HashMap
 
 class GraveHandler {
-    var graves: HashMap<OfflinePlayer, HashMap<UUID, List<ItemStack?>>> = HashMap()
-    fun addGrave(p: OfflinePlayer, graveId: UUID, items: List<ItemStack?>) {
+    private var graves: HashMap<OfflinePlayer, HashMap<UUID, GraveData>> = HashMap()
+    fun addGrave(p: OfflinePlayer, graveId: UUID, graveData: GraveData) {
         val playerGraves = graves[p]
         if (playerGraves == null) {
-            graves[p] = hashMapOf(Pair(graveId, items))
+            graves[p] = hashMapOf(Pair(graveId, graveData))
         } else {
-            playerGraves[graveId] = items
+            playerGraves[graveId] = graveData
         }
     }
-    fun removeGrave(p: OfflinePlayer, graveId: UUID) : List<ItemStack?>? {
+    fun removeGrave(p: OfflinePlayer, graveId: UUID) : GraveData? {
         return graves[p]?.remove(graveId)
     }
 }
