@@ -1,0 +1,6 @@
+name: SourGraves
+version: dev1
+main: io.github.irishgreencitrus.sourgraves.SourGraves
+description: A better graves plugin
+author: irishgreencitrus
+api-version: '1.20'
