@@ -9,11 +9,8 @@ class GraveHandler {
     private var maxGraves: Int = 3;
 
     private var graves: HashMap<UUID, GraveData> = HashMap()
-    private var hardExpiries: HashMap<UUID, LocalDateTime> = HashMap()
     operator fun set(graveId: UUID, graveData: GraveData) {
         graves[graveId] = graveData
-        hardExpiries[graveId] =
-            graveData.createdAt.plusMinutes(graveData.expireInMinutes.toLong())
     }
     fun removeGrave(graveId: UUID) : GraveData? {
         return graves.remove(graveId)
@@ -43,8 +40,9 @@ class GraveHandler {
     }
 
     fun cleanupHardExpiredGraves() {
-        hardExpiries.forEach{ (u, t) ->
-            if (t.isAfter(LocalDateTime.now())) purgeGraveDropItems(u)
+        graves.forEach { (u, g) ->
+            if (g.hasHardExpired())
+                purgeGraveDropItems(u)
         }
     }
 

@@ -17,4 +17,8 @@ data class GraveData(
         val expiryDate = createdAt.plusMinutes(expireInMinutes.toLong())
         return expiryDate.isBefore(LocalDateTime.now())
     }
+    fun hasHardExpired(): Boolean {
+        val expiryDate = createdAt.plusMinutes(hardExpireInMinutes.toLong())
+        return expiryDate.isBefore(LocalDateTime.now())
+    }
 }
