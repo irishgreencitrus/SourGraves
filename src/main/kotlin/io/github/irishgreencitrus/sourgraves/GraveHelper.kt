@@ -23,7 +23,6 @@ object GraveHelper {
             setGravity(false)
             isInvisible = true
             isInvulnerable = true
-            setMetadata("sour_grave_owner", FixedMetadataValue(SourGraves.plugin,player.uniqueId.toString()))
             setMetadata("sour_grave_id", FixedMetadataValue(SourGraves.plugin, graveId.toString()))
             customName(message.color(NamedTextColor.RED))
             isCustomNameVisible = true
