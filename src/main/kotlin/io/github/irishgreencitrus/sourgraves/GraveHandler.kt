@@ -20,17 +20,23 @@ class GraveHandler {
             graveData.owner == player
         }
     }
+    fun findOldestGrave(player: OfflinePlayer) : Pair<UUID, GraveData>? {
+        return findOwnedGraves(player).minByOrNull {
+            it.value.createdAt
+        }?.toPair()
+    }
+
     fun hasGraveExpired(uuid: UUID) : Boolean? {
         val time = graves[uuid]?.createdAt ?: return null
         val expiredTime = time.plusMinutes(10L)
         return expiredTime.isBefore(LocalDateTime.now())
     }
 
-    private fun purgeGrave(uuid: UUID) {
+    fun purgeGrave(uuid: UUID) {
         graves[uuid]!!.linkedArmourStand.remove();
         removeGrave(uuid);
     }
-    private fun purgeGraveDropItems(uuid: UUID) {
+    fun purgeGraveDropItems(uuid: UUID) {
         val grave = graves[uuid] ?: return
         val armourStandLocation = grave.linkedArmourStand.location
         grave.items.filterNotNull().forEach {

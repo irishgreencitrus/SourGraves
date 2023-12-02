@@ -15,8 +15,10 @@ import java.time.LocalDateTime
 import java.util.*
 
 class GraveListener : Listener {
+    val MAX_GRAVES = 3;
     @EventHandler
     fun onPlayerDeath(e: PlayerDeathEvent) {
+        val handl = SourGraves.plugin.graveHandler
         val inv = e.player.inventory
         if (inv.isEmpty) return
         val graveId = UUID.randomUUID()
@@ -24,8 +26,12 @@ class GraveListener : Listener {
 
         val armourStand = e.player.world.spawnEntity(e.player.location.subtract(0.0,1.3,0.0), EntityType.ARMOR_STAND) as ArmorStand
         GraveHelper.makeGraveArmourStand(armourStand, graveId, e.player, message = e.deathMessage() ?: Component.text("${e.player.name} died"))
-
-        SourGraves.plugin.graveHandler[graveId] = GraveData(
+        val currentGraves = handl.findOwnedGraves(e.player)
+        if (currentGraves.size >= MAX_GRAVES) {
+            val oldestGrave = handl.findOldestGrave(e.player)!!
+            handl.purgeGraveDropItems(oldestGrave.first)
+        }
+        handl[graveId] = GraveData(
             items = inv.contents.toList(),
             createdAt = LocalDateTime.now(),
             owner = e.player,
@@ -33,6 +39,7 @@ class GraveListener : Listener {
             hardExpireInMinutes = 30,
             linkedArmourStand = armourStand
         )
+
     }
     @EventHandler
     fun onPlayerInteractAtEntity(e: PlayerInteractAtEntityEvent) {
