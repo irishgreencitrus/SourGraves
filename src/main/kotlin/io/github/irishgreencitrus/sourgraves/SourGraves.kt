@@ -19,7 +19,7 @@ class SourGraves : JavaPlugin() {
     fun initConfig() {
         val configFile = File(dataFolder, "config.toml")
         if (!configFile.exists()) {
-            configFile.mkdirs()
+            configFile.parentFile.mkdirs()
             configFile.writeText(GraveConfig().toString())
         }
         pluginConfig = GraveConfig.fromFile(configFile)

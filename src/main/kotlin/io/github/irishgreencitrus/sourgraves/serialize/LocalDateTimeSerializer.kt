@@ -20,7 +20,7 @@ object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     }
 
     override fun serialize(encoder: Encoder, value: LocalDateTime) {
-        encoder.encodeLong(value.getLong(ChronoField.INSTANT_SECONDS))
+        encoder.encodeLong(value.atOffset(ZoneOffset.UTC).getLong(ChronoField.INSTANT_SECONDS))
     }
 
 }
