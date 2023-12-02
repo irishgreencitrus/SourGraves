@@ -1,7 +1,5 @@
 package io.github.irishgreencitrus.sourgraves
 
-import io.github.irishgreencitrus.sourgraves.persist.GravePersist
-import io.github.irishgreencitrus.sourgraves.persist.GravePersistJSON
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
@@ -13,8 +11,7 @@ class SourGraves : JavaPlugin() {
         }
     }
 
-    val gravePersist: GravePersist = GravePersistJSON(File(dataFolder, "graves.json"))
-    var graveHandler = GraveHandler(gravePersist)
+    var graveHandler = GraveHandler()
     lateinit var pluginConfig: GraveConfig
     fun initConfig() {
         val configFile = File(dataFolder, "config.toml")
@@ -28,8 +25,6 @@ class SourGraves : JavaPlugin() {
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(GraveListener(), this)
         // Starts after 10 minutes, clears graves every 5
-        gravePersist.initialize()
-        graveHandler.load()
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, {
                 graveHandler.cleanupHardExpiredGraves()
         }, 10 * 60 * 20, 5 * 60 * 20)
@@ -39,7 +34,6 @@ class SourGraves : JavaPlugin() {
 
 
     override fun onDisable() {
-        graveHandler.save()
         logger.info("irishgreencitrus' SourGraves have been disabled.")
     }
 }

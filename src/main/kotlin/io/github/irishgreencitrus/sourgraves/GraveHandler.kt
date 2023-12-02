@@ -1,11 +1,10 @@
 package io.github.irishgreencitrus.sourgraves
 
-import io.github.irishgreencitrus.sourgraves.persist.GravePersist
 import org.bukkit.OfflinePlayer
 import java.time.LocalDateTime
 import java.util.*
 
-class GraveHandler(val persist: GravePersist) {
+class GraveHandler {
     private var maxGraves: Int = 3
 
     private var graves: HashMap<UUID, GraveData> = HashMap()
@@ -59,13 +58,5 @@ class GraveHandler(val persist: GravePersist) {
 
     operator fun get(uuid: UUID) : GraveData? {
         return graves[uuid]
-    }
-
-    fun save(): Boolean {
-        return persist.saveGraves(graves)
-    }
-
-    fun load() {
-        graves = persist.loadGraves()
     }
 }
