@@ -1,12 +1,12 @@
 package io.github.irishgreencitrus.sourgraves
 
+import io.github.irishgreencitrus.sourgraves.persist.GravePersist
 import org.bukkit.OfflinePlayer
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.HashMap
 
-class GraveHandler {
-    private var maxGraves: Int = 3;
+class GraveHandler(val persist: GravePersist) {
+    private var maxGraves: Int = 3
 
     private var graves: HashMap<UUID, GraveData> = HashMap()
     operator fun set(graveId: UUID, graveData: GraveData) {
@@ -33,9 +33,10 @@ class GraveHandler {
     }
 
     fun purgeGrave(uuid: UUID) {
-        graves[uuid]!!.linkedArmourStand.remove();
-        removeGrave(uuid);
+        graves[uuid]!!.linkedArmourStand.remove()
+        removeGrave(uuid)
     }
+
     fun purgeGraveDropItems(uuid: UUID) {
         val grave = graves[uuid] ?: return
         val armourStandLocation = grave.linkedArmourStand.location
@@ -58,5 +59,13 @@ class GraveHandler {
 
     operator fun get(uuid: UUID) : GraveData? {
         return graves[uuid]
+    }
+
+    fun save(): Boolean {
+        return persist.saveGraves(graves)
+    }
+
+    fun load() {
+        graves = persist.loadGraves()
     }
 }

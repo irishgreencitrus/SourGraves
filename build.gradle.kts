@@ -1,8 +1,6 @@
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
     kotlin("jvm") version "1.9.20"
     application
 }
@@ -17,6 +15,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("net.peanuuutz.tomlkt:tomlkt:0.3.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
 }
 
