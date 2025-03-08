@@ -3,12 +3,13 @@ package io.github.irishgreencitrus.sourgraves
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.ArmorStand
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
-import org.bukkit.metadata.FixedMetadataValue
+import org.bukkit.persistence.PersistentDataType
 import java.time.Instant
 import java.util.*
 
@@ -23,7 +24,11 @@ object GraveHelper {
             setGravity(false)
             isInvisible = true
             isInvulnerable = true
-            setMetadata("sour_grave_id", FixedMetadataValue(SourGraves.plugin, graveId.toString()))
+            persistentDataContainer.set(
+                NamespacedKey(SourGraves.plugin, "sour_grave_id"),
+                PersistentDataType.STRING,
+                graveId.toString()
+            )
             customName(message.color(NamedTextColor.RED))
             isCustomNameVisible = true
             setDisabledSlots(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND)

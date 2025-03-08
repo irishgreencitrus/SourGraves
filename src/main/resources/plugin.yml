@@ -4,3 +4,12 @@ main: io.github.irishgreencitrus.sourgraves.SourGraves
 description: A better graves plugin
 author: irishgreencitrus
 api-version: ${minecraftVersion}
+commands:
+  sourgraves:
+    description: Manage the SourGraves plugin
+    usage: "Usage: /sourgraves <subcommand>"
+    permission: sourgraves.gravemanager
+permissions:
+  sourgraves.gravemanager:
+    description: Allows you to manage graves
+    default: op

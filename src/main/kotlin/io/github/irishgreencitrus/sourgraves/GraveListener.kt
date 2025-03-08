@@ -4,6 +4,7 @@ import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.NamespacedKey
 import org.bukkit.Particle
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.EntityType
@@ -11,6 +12,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
+import org.bukkit.persistence.PersistentDataType
 import java.time.Instant
 import java.util.*
 
@@ -46,9 +48,10 @@ class GraveListener : Listener {
         val cfg = SourGraves.plugin.pluginConfig
 
         val armourStand: ArmorStand = e.rightClicked as ArmorStand
-        if (!armourStand.hasMetadata("sour_grave_id")) return
+        val key = NamespacedKey(SourGraves.plugin, "sour_grave_id")
+        if (!armourStand.persistentDataContainer.has(key)) return
 
-        val graveUUID = UUID.fromString(armourStand.getMetadata("sour_grave_id")[0].asString())
+        val graveUUID = UUID.fromString(armourStand.persistentDataContainer.get(key, PersistentDataType.STRING))
         val grave = SourGraves.plugin.graveHandler[graveUUID] ?: return
         val canAccess = (e.player.uniqueId == grave.ownerUuid) || GraveHelper.isGravePublic(grave)
 
@@ -57,6 +60,7 @@ class GraveListener : Listener {
         }
 
         armourStand.world.spawnParticle(Particle.valueOf(cfg.recoverParticle), armourStand.location.add(0.0,2.0,0.0), cfg.recoverParticleAmount)
+
         e.player.playSound(
             Sound.sound(
                 Key.key(cfg.recoverSound), Sound.Source.PLAYER, 1f, 1f))

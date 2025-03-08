@@ -1,5 +1,6 @@
 package io.github.irishgreencitrus.sourgraves
 
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
@@ -12,34 +13,53 @@ class SourGraves : JavaPlugin() {
     }
 
     var graveHandler = GraveHandler()
-    lateinit var pluginConfig: GraveConfig
+    var pluginConfig = GraveConfig()
 
-    private fun initConfig() {
-        val configFile = File(dataFolder, "config.toml")
-        if (!configFile.exists()) {
+    private val configFileName = "config.toml"
+
+    fun writeConfig(always: Boolean) {
+        val configFile = File(dataFolder, configFileName)
+        if (!configFile.exists() || always) {
             configFile.parentFile.mkdirs()
-            configFile.writeText(GraveConfig().toFileString())
+            configFile.writeText(pluginConfig.toFileString())
         }
+    }
+
+    fun loadConfig() {
+        val configFile = File(dataFolder, configFileName)
         pluginConfig = GraveConfig.fromFile(configFile)
     }
 
 
+    @Suppress("UnstableApiUsage")
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(GraveListener(), this)
-        // Starts after 10 minutes, clears graves every 5
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, {
-                graveHandler.cleanupHardExpiredGraves()
-        }, 10 * 60 * 20, 5 * 60 * 20)
-        initConfig()
+        writeConfig(always = false)
+        loadConfig()
         graveHandler.loadGravesFile(dataFolder)
         if (pluginConfig.resetTimeoutOnStop) {
             graveHandler.resetGraveTimers()
         }
+
+        lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
+            it.registrar().register(GraveCommand.createCommand().build())
+        }
+
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(
+            this, {
+                graveHandler.cleanupHardExpiredGraves()
+                graveHandler.writeGravesFile(dataFolder)
+                logger.info("Cleaned graves and written to disk")
+            },
+            pluginConfig.periodicCleanupDelayMinutes.toLong() * 60 * 20,
+            pluginConfig.periodicCleanupPeriodMinutes.toLong() * 60 * 20
+        )
         logger.info("irishgreencitrus' SourGraves are ready.")
     }
 
 
     override fun onDisable() {
+        writeConfig(always = true)
         graveHandler.writeGravesFile(dataFolder)
         logger.info("irishgreencitrus' SourGraves have been disabled.")
     }

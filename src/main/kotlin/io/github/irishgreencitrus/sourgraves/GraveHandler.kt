@@ -15,18 +15,16 @@ class GraveHandler {
     }
 
     @Serializable
-    private var graves: HashMap<UUID, GraveData> = HashMap()
+    var graves: HashMap<UUID, GraveData> = HashMap()
 
     fun writeGravesFile(dataFolder: File) {
         val graveFile = File(dataFolder, "graves.json")
-        if (!graveFile.exists()) {
-            graveFile.parentFile.mkdirs()
-            val serInstance = Json {
-                explicitNulls = true
-                serializersModule = module
-            }
-            graveFile.writeText(serInstance.encodeToString(graves))
+        graveFile.parentFile.mkdirs()
+        val serInstance = Json {
+            explicitNulls = true
+            serializersModule = module
         }
+        graveFile.writeText(serInstance.encodeToString(graves))
     }
 
     fun loadGravesFile(dataFolder: File) {
@@ -37,6 +35,7 @@ class GraveHandler {
             serializersModule = module
         }
         graves = serInstance.decodeFromString(graveFile.readText())
+        SourGraves.plugin.logger.info("Loaded ${graves.count()} grave(s)")
     }
 
     fun resetGraveTimers() {
@@ -76,7 +75,11 @@ class GraveHandler {
         val grave = graves[uuid] ?: return
         val armourUuid = graves[uuid]!!.linkedArmourStandUuid
         val armourStand = SourGraves.plugin.server.getEntity(armourUuid)
-        val armourStandLocation = armourStand!!.location
+        if (armourStand == null) {
+            SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid")
+            return
+        }
+        val armourStandLocation = armourStand.location
         grave.items.filterNotNull().forEach {
             armourStand.world.dropItemNaturally(armourStandLocation, it)
         }
