@@ -11,7 +11,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.*
 
 class GraveListener : Listener {
@@ -33,14 +33,13 @@ class GraveListener : Listener {
         }
         handl[graveId] = GraveData(
             items = inv.contents.toList(),
-            createdAt = LocalDateTime.now(),
+            createdAt = Instant.now(),
             ownerUuid = e.player.uniqueId,
-            publicInMinutes = 10,
-            deletedInMinutes = 30,
             linkedArmourStandUuid = armourStand.uniqueId
         )
 
     }
+
     @EventHandler
     fun onPlayerInteractAtEntity(e: PlayerInteractAtEntityEvent) {
         if (e.rightClicked.type != EntityType.ARMOR_STAND) return
@@ -51,7 +50,7 @@ class GraveListener : Listener {
 
         val graveUUID = UUID.fromString(armourStand.getMetadata("sour_grave_id")[0].asString())
         val grave = SourGraves.plugin.graveHandler[graveUUID] ?: return
-        val canAccess = (e.player.uniqueId == grave.ownerUuid) || grave.isGravePublic()
+        val canAccess = (e.player.uniqueId == grave.ownerUuid) || GraveHelper.isGravePublic(grave)
 
         if (!canAccess) {
             e.player.sendMessage(Component.text("You can't access this grave").color(NamedTextColor.YELLOW))

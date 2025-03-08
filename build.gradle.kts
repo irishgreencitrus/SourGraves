@@ -4,10 +4,11 @@ plugins {
     kotlin("jvm") version "2.1.10"
     application
 }
-
+val pluginName = "SourGraves"
 val minecraftVersion = "1.21.4"
+val pluginVersion = "0.1.0"
 group = "io.github.irishgreencitrus"
-version = "${minecraftVersion}-dev1"
+version = "$minecraftVersion-$pluginVersion"
 val paperApiVersion = "$minecraftVersion-R0.1-SNAPSHOT"
 
 repositories {
@@ -24,6 +25,24 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.processResources {
+    filesMatching("plugin.yml") {
+        expand(
+            "pluginName" to pluginName,
+            "pluginVersion" to pluginVersion,
+            "minecraftVersion" to minecraftVersion,
+        )
+    }
+}
+
+tasks.shadowJar {
+    archiveFileName = "$pluginName-$version.jar"
+}
+
+tasks.jar {
+    archiveFileName = "$pluginName-$version-slim.jar"
 }
 
 kotlin {

@@ -6,11 +6,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import org.bukkit.OfflinePlayer
 import java.io.File
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.*
 
 class GraveHandler {
-
     private val module = SerializersModule {
         contextual(UUID::class, UUIDSerializer)
     }
@@ -42,7 +41,7 @@ class GraveHandler {
 
     fun resetGraveTimers() {
         graves.forEach {
-            it.value.createdAt = LocalDateTime.now()
+            it.value.createdAt = Instant.now()
         }
     }
 
@@ -86,10 +85,11 @@ class GraveHandler {
 
     fun cleanupHardExpiredGraves() {
         graves.forEach { (u, g) ->
-            if (g.isGraveQueuedForDeletion())
+            if (GraveHelper.isGraveQueuedForDeletion(g))
                 purgeGraveDropItems(u)
         }
     }
+
 
     operator fun contains(uuid: UUID) : Boolean {
         return graves.containsKey(uuid)

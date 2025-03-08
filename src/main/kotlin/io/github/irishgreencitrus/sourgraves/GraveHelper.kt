@@ -1,7 +1,6 @@
 package io.github.irishgreencitrus.sourgraves
 
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.ComponentBuilder
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
@@ -10,6 +9,7 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.metadata.FixedMetadataValue
+import java.time.Instant
 import java.util.*
 
 object GraveHelper {
@@ -28,5 +28,17 @@ object GraveHelper {
             isCustomNameVisible = true
             setDisabledSlots(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND)
         }
+    }
+
+    fun isGravePublic(graveData: GraveData): Boolean {
+        val cfg = SourGraves.plugin.pluginConfig
+        val expiryDate = graveData.createdAt.plusSeconds(cfg.publicInMinutes.toLong() * 60)
+        return expiryDate.isBefore(Instant.now())
+    }
+
+    fun isGraveQueuedForDeletion(graveData: GraveData): Boolean {
+        val cfg = SourGraves.plugin.pluginConfig
+        val deletionDateTime = graveData.createdAt.plusSeconds(cfg.deleteInMinutes.toLong() * 60)
+        return deletionDateTime.isBefore(Instant.now())
     }
 }

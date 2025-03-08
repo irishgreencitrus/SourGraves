@@ -1,6 +1,6 @@
-name: SourGraves
-version: dev1
+name: ${pluginName}
+version: ${pluginVersion}
 main: io.github.irishgreencitrus.sourgraves.SourGraves
 description: A better graves plugin
 author: irishgreencitrus
-api-version: '1.20'
+api-version: ${minecraftVersion}
