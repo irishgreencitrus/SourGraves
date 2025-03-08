@@ -6,7 +6,7 @@ plugins {
 }
 val pluginName = "SourGraves"
 val minecraftVersion = "1.21.4"
-val pluginVersion = "0.1.0"
+val pluginVersion = "1.0.0"
 group = "io.github.irishgreencitrus"
 version = "$minecraftVersion-$pluginVersion"
 val paperApiVersion = "$minecraftVersion-R0.1-SNAPSHOT"
