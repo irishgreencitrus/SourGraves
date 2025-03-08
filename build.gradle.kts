@@ -1,12 +1,14 @@
 plugins {
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    kotlin("jvm") version "1.9.20"
+    id("com.gradleup.shadow") version "8.3.6"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10"
+    kotlin("jvm") version "2.1.10"
     application
 }
 
+val minecraftVersion = "1.21.4"
 group = "io.github.irishgreencitrus"
-version = "dev1"
+version = "${minecraftVersion}-dev1"
+val paperApiVersion = "$minecraftVersion-R0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -15,9 +17,9 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("net.peanuuutz.tomlkt:tomlkt:0.3.7")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
+    implementation("net.peanuuutz.tomlkt:tomlkt:0.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    compileOnly("io.papermc.paper:paper-api:$paperApiVersion")
 }
 
 tasks.test {
@@ -28,7 +30,7 @@ kotlin {
     jvmToolchain(8)
 }
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 application {

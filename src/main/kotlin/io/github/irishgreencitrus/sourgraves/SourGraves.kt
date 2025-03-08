@@ -13,14 +13,16 @@ class SourGraves : JavaPlugin() {
 
     var graveHandler = GraveHandler()
     lateinit var pluginConfig: GraveConfig
-    fun initConfig() {
+
+    private fun initConfig() {
         val configFile = File(dataFolder, "config.toml")
         if (!configFile.exists()) {
             configFile.parentFile.mkdirs()
-            configFile.writeText(GraveConfig().toString())
+            configFile.writeText(GraveConfig().toFileString())
         }
         pluginConfig = GraveConfig.fromFile(configFile)
     }
+
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(GraveListener(), this)
@@ -29,11 +31,16 @@ class SourGraves : JavaPlugin() {
                 graveHandler.cleanupHardExpiredGraves()
         }, 10 * 60 * 20, 5 * 60 * 20)
         initConfig()
+        graveHandler.loadGravesFile(dataFolder)
+        if (pluginConfig.resetTimeoutOnStop) {
+            graveHandler.resetGraveTimers()
+        }
         logger.info("irishgreencitrus' SourGraves are ready.")
     }
 
 
     override fun onDisable() {
+        graveHandler.writeGravesFile(dataFolder)
         logger.info("irishgreencitrus' SourGraves have been disabled.")
     }
 }
