@@ -57,10 +57,12 @@ class GraveListener : Listener {
 
         val graveUUID = UUID.fromString(armourStand.persistentDataContainer.get(key, PersistentDataType.STRING))
         val grave = SourGraves.plugin.graveHandler[graveUUID] ?: return
+
         val canAccess = (e.player.uniqueId == grave.ownerUuid) || GraveHelper.isGravePublic(grave)
 
         if (!canAccess) {
             e.player.sendMessage(Component.text("You can't access this grave").color(NamedTextColor.YELLOW))
+            return
         }
 
         armourStand.world.spawnParticle(Particle.valueOf(cfg.recoverParticle), armourStand.location.add(0.0,2.0,0.0), cfg.recoverParticleAmount)
