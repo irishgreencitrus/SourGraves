@@ -9,6 +9,7 @@ import org.bukkit.Particle
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.EntityType
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
@@ -17,12 +18,15 @@ import java.time.Instant
 import java.util.*
 
 class GraveListener : Listener {
-    @EventHandler
+
+    @EventHandler(priority = EventPriority.HIGH)
     fun onPlayerDeath(e: PlayerDeathEvent) {
         val handl = SourGraves.plugin.graveHandler
         val cfg = SourGraves.plugin.pluginConfig
         val inv = e.player.inventory
         if (inv.isEmpty) return
+        if (e.keepInventory) return
+
         val graveId = UUID.randomUUID()
         e.drops.clear()
 
