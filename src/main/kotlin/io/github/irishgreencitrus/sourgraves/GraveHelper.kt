@@ -2,10 +2,9 @@ package io.github.irishgreencitrus.sourgraves
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
-import org.bukkit.OfflinePlayer
+import org.bukkit.*
 import org.bukkit.entity.ArmorStand
+import org.bukkit.entity.Entity
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
@@ -37,13 +36,24 @@ object GraveHelper {
 
     fun isGravePublic(graveData: GraveData): Boolean {
         val cfg = SourGraves.plugin.pluginConfig
+        if (cfg.publicInMinutes == -1) return false
         val expiryDate = graveData.createdAt.plusSeconds(cfg.publicInMinutes.toLong() * 60)
         return expiryDate.isBefore(Instant.now())
     }
 
     fun isGraveQueuedForDeletion(graveData: GraveData): Boolean {
         val cfg = SourGraves.plugin.pluginConfig
+        if (cfg.deleteInMinutes == -1) return false
         val deletionDateTime = graveData.createdAt.plusSeconds(cfg.deleteInMinutes.toLong() * 60)
         return deletionDateTime.isBefore(Instant.now())
+    }
+
+    fun getArmourStandEntity(server: Server, graveData: GraveData): Entity? {
+        val entity = server.getEntity(graveData.linkedArmourStandUuid)
+        return entity
+    }
+
+    fun getArmourStandLocation(server: Server, graveData: GraveData): Location? {
+        return getArmourStandEntity(server, graveData)?.location
     }
 }

@@ -4,7 +4,9 @@ import io.github.irishgreencitrus.sourgraves.serialize.UUIDSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
+import org.bukkit.Location
 import org.bukkit.OfflinePlayer
+import org.bukkit.entity.Player
 import java.io.File
 import java.time.Instant
 import java.util.*
@@ -58,10 +60,46 @@ class GraveHandler {
         }
     }
 
+    fun findSameDimensionGraves(player: Player): Map<UUID, GraveData> {
+        return findOwnedGraves(player).filterValues { graveData ->
+            val armourStand = player.server.getEntity(graveData.linkedArmourStandUuid)
+            armourStand != null && armourStand.world.uid == player.world.uid
+        }
+    }
+
+    fun graveInPlayerDimension(player: Player, graveId: UUID): Boolean {
+        if (!graves.containsKey(graveId)) return false
+        val grave = graves[graveId]!!
+        val armourStand = player.server.getEntity(grave.linkedArmourStandUuid)
+        return armourStand != null && armourStand.world.uid == player.world.uid
+    }
+
+    fun playerSameDimensionGravesByAge(player: Player): List<Pair<UUID, GraveData>> {
+        return findSameDimensionGraves(player).toList().sortedBy {
+            it.second.createdAt
+        }
+    }
+
     fun findOldestGrave(player: OfflinePlayer) : Pair<UUID, GraveData>? {
         return findOwnedGraves(player).minByOrNull {
             it.value.createdAt
         }?.toPair()
+    }
+
+    fun findNewestGrave(player: OfflinePlayer): Pair<UUID, GraveData>? {
+        return findOwnedGraves(player).maxByOrNull {
+            it.value.createdAt
+        }?.toPair()
+    }
+
+    fun locateGrave(uuid: UUID): Pair<Location, GraveData>? {
+        val grave = graves[uuid] ?: return null
+        val armourStand = SourGraves.plugin.server.getEntity(grave.linkedArmourStandUuid)
+        if (armourStand == null) {
+            SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid")
+            return null
+        }
+        return Pair(armourStand.location, grave)
     }
 
     private fun purgeGrave(uuid: UUID) {
@@ -73,7 +111,7 @@ class GraveHandler {
 
     fun purgeGraveDropItems(uuid: UUID) {
         val grave = graves[uuid] ?: return
-        val armourUuid = graves[uuid]!!.linkedArmourStandUuid
+        val armourUuid = grave.linkedArmourStandUuid
         val armourStand = SourGraves.plugin.server.getEntity(armourUuid)
         if (armourStand == null) {
             SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid")

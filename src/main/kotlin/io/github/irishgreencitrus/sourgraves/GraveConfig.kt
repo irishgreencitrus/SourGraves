@@ -10,12 +10,20 @@ import java.io.File
 
 @Serializable
 data class GraveConfig(
-    @TomlComment("After this many minutes, the grave will be accessible by all players")
+    @TomlComment(
+        "After this many minutes, the grave will be accessible by all players.\n" +
+                "Set to `-1` to disable this."
+    )
     var publicInMinutes: Int = 5,
-    @TomlComment("After this many minutes, the grave will be deleted")
+    @TomlComment(
+        "After this many minutes, the grave will be deleted.\n" +
+                "Set to `-1` to disable this."
+    )
     var deleteInMinutes: Int = 30,
     @TomlComment("The maximum number of graves a player can have.\n"
-            + "After this limit, a player's oldest grave will be deleted")
+            + "After this limit, a player's oldest grave will be deleted.\n"
+            + "Set to `-1` to disable this"
+    )
     var maxGravesPerPlayer: Int = 3,
     @TomlComment("Whether to drop the items of the oldest grave once a player has exceeded max graves")
     var dropItemsOnTooManyGraves: Boolean = true,
@@ -33,6 +41,8 @@ data class GraveConfig(
     var periodicCleanupPeriodMinutes: Int = 5,
     @TomlComment("Whether to reset the grave timeout when the server stops")
     var resetTimeoutOnStop: Boolean = false,
+    @TomlComment("Whether to send a player their grave coordinates once they respawn")
+    var notifyCoordsOnRespawn: Boolean = false,
 ) {
     companion object {
         fun fromFile(f: File): GraveConfig {

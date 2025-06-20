@@ -132,7 +132,8 @@ infix fun <S> ArgumentBuilder<S, *>.does(command: (@BrigadierDsl CommandContext<
     }
 }
 
-infix fun <S> ArgumentBuilder<S, *>.doesReturning(command: (@BrigadierDsl CommandContext<S>) -> Int) = executes(command)
+infix fun <S> ArgumentBuilder<S, *>.doesReturning(command: (@BrigadierDsl CommandContext<S>) -> Int): ArgumentBuilder<*, *> =
+    executes(command)
 
 /**
  * Gets the value of a (required) argument in the command hierarchy

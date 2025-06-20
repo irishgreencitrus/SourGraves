@@ -1,5 +1,6 @@
 package io.github.irishgreencitrus.sourgraves
 
+import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -33,9 +34,11 @@ class GraveListener : Listener {
         val armourStand = e.player.world.spawnEntity(e.player.location.subtract(0.0,1.3,0.0), EntityType.ARMOR_STAND) as ArmorStand
         GraveHelper.makeGraveArmourStand(armourStand, graveId, e.player, message = e.deathMessage() ?: Component.text("${e.player.name} died"))
         val currentGraves = handl.findOwnedGraves(e.player)
-        if (currentGraves.size >= cfg.maxGravesPerPlayer) {
-            val oldestGrave = handl.findOldestGrave(e.player)!!
-            handl.purgeGraveDropItems(oldestGrave.first)
+        if (cfg.maxGravesPerPlayer != -1) {
+            if (currentGraves.size >= cfg.maxGravesPerPlayer) {
+                val oldestGrave = handl.findOldestGrave(e.player)!!
+                handl.purgeGraveDropItems(oldestGrave.first)
+            }
         }
         handl[graveId] = GraveData(
             items = inv.contents.toList(),
@@ -80,6 +83,22 @@ class GraveListener : Listener {
         leftOvers.values.forEach {
             e.player.world.dropItemNaturally(e.player.location,it)
         }
+
+    }
+
+    @EventHandler
+    fun onPlayerRespawn(e: PlayerPostRespawnEvent) {
+        val cfg = SourGraves.plugin.pluginConfig
+
+        if (!cfg.notifyCoordsOnRespawn) return
+        val grave = SourGraves.plugin.graveHandler.findNewestGrave(e.player) ?: return
+        val locatedGrave = SourGraves.plugin.graveHandler.locateGrave(grave.first) ?: return
+        val gravePos = locatedGrave.first
+
+        e.player.sendMessage(
+            Component.text("Your most recent grave is at ${gravePos.blockX}, ${gravePos.blockY}, ${gravePos.blockZ} in ${gravePos.world.name}")
+                .color(NamedTextColor.YELLOW)
+        )
 
     }
 }

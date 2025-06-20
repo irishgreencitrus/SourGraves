@@ -8,8 +8,16 @@ commands:
   sourgraves:
     description: Manage the SourGraves plugin
     usage: "Usage: /sourgraves <subcommand>"
-    permission: sourgraves.gravemanager
 permissions:
-  sourgraves.gravemanager:
-    description: Allows you to manage graves
+  sourgraves.admin.server:
+    description: Allows you to use `/sourgraves disk` and `/sourgraves config`
     default: op
+  sourgraves.admin.settings:
+    description: Allows you to use `/sourgraves settings`
+    default: op
+  sourgraves.utils.player:
+    description: Allows you to use `/sourgraves player`
+    default: op
+  sourgraves.utils.locateown:
+    description: Allows you to use `/sourgraves locate`
+    default: true
