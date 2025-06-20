@@ -28,6 +28,7 @@ tasks.test {
 }
 
 tasks.processResources {
+    outputs.upToDateWhen { false }
     filesMatching("plugin.yml") {
         expand(
             "pluginName" to pluginName,
