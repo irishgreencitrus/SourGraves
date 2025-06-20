@@ -337,7 +337,7 @@ object GraveCommand {
                     }
                 }
                 requires {
-                    it.sender.hasPermission("sourgraves.util.locateown")
+                    it.sender.hasPermission("sourgraves.utils.locateown")
                             && it.sender is Player
                 }
             }
