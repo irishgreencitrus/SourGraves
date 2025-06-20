@@ -249,7 +249,7 @@ object GraveCommand {
                             return@doesReturning 2
                         }
                         val target = gravesWithDistance.first().third!!
-                        player.sendMessage(Component.text("Your nearest grave is at ${target.x} ${target.y} {$target.z}"))
+                        player.sendMessage(Component.text("Your nearest grave is at ${target.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }
                 }
@@ -277,7 +277,7 @@ object GraveCommand {
                             return@doesReturning 2
                         }
                         val target = gravesWithDistance.first().third!!
-                        player.sendMessage(Component.text("Your furthest grave is at ${target.x} ${target.y} {$target.z}"))
+                        player.sendMessage(Component.text("Your furthest grave is at ${target.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }
                 }
@@ -304,7 +304,7 @@ object GraveCommand {
                             )
                             return@doesReturning 2
                         }
-                        player.sendMessage(Component.text("Your oldest grave is at ${target!!.x} ${target.y} ${target.z}"))
+                        player.sendMessage(Component.text("Your oldest grave is at ${target!!.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }
                 }
@@ -332,7 +332,7 @@ object GraveCommand {
                             return@doesReturning 2
                         }
 
-                        player.sendMessage(Component.text("Your newest grave is at ${target!!.x} ${target.y} ${target.z}"))
+                        player.sendMessage(Component.text("Your newest grave is at ${target!!.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }
                 }
