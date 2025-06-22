@@ -109,7 +109,7 @@ class GraveHandler {
         removeGrave(uuid)
     }
 
-    fun purgeGraveDropItems(uuid: UUID) {
+    fun purgeGraveDropItems(uuid: UUID, tooManyGraves: Boolean = false) {
         val grave = graves[uuid] ?: return
         val armourUuid = grave.linkedArmourStandUuid
         val armourStand = SourGraves.plugin.server.getEntity(armourUuid)
@@ -117,10 +117,16 @@ class GraveHandler {
             SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid")
             return
         }
-        val armourStandLocation = armourStand.location
-        grave.items.filterNotNull().forEach {
-            armourStand.world.dropItemNaturally(armourStandLocation, it)
+
+        val cfg = SourGraves.plugin.pluginConfig;
+
+        if ((tooManyGraves && cfg.dropItemsOnTooManyGraves) || cfg.dropItemsOnGraveDeletion) {
+            val armourStandLocation = armourStand.location
+            grave.items.filterNotNull().forEach {
+                armourStand.world.dropItemNaturally(armourStandLocation, it)
+            }
         }
+
         purgeGrave(uuid)
     }
 

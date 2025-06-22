@@ -65,7 +65,14 @@ data class GraveConfig(
             # Everything in the plugin is completely configurable.
             # If you mess up the file, you can delete it to reset it to the defaults.
             #
-            # A player without any items in their inventory will not drop a grave.
+            # Some key notes:
+            #  - A player without any items in their inventory will not drop a grave.
+            #  - A player with keepInventory enabled will not drop a grave.
+            #  - Comments made in this file will be deleted.
+            #  - The cleanup task is what actually deletes graves, as well as saves graves to disk.
+            #     It should not be ran too infrequently, as your graves will not be saved if the server crashes.
+            #     The default should probably be fine, but it can be raised or lowered as necessary.   
+            #
         """.trimIndent() + toString()
     }
 }

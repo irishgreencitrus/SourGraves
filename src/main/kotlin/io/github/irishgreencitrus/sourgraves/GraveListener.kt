@@ -37,7 +37,7 @@ class GraveListener : Listener {
         if (cfg.maxGravesPerPlayer != -1) {
             if (currentGraves.size >= cfg.maxGravesPerPlayer) {
                 val oldestGrave = handl.findOldestGrave(e.player)!!
-                handl.purgeGraveDropItems(oldestGrave.first)
+                handl.purgeGraveDropItems(oldestGrave.first, tooManyGraves = true)
             }
         }
         handl[graveId] = GraveData(
