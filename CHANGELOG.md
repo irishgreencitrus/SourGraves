@@ -1,3 +1,9 @@
+# Release 1.3.0
+
+- Fix bug related to Bukkit not properly reporting the version of the plugin.
+- Fix items always being dropped even with the purge graves config being `false`.
+- Add some notes into the config file.
+
 # Release 1.2.0
 
 - Fix a bug related to permissions not working correctly which meant anyone could edit settings (oops)
