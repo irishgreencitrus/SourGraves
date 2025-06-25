@@ -43,6 +43,8 @@ data class GraveConfig(
     var resetTimeoutOnStop: Boolean = false,
     @TomlComment("Whether to send a player their grave coordinates once they respawn")
     var notifyCoordsOnRespawn: Boolean = false,
+    @TomlComment("Whether to write a message to the console every time the cleanup task runs")
+    var logCleanupTaskRuns: Boolean = false
 ) {
     companion object {
         fun fromFile(f: File): GraveConfig {

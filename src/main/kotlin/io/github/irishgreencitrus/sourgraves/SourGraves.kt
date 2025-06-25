@@ -49,7 +49,8 @@ class SourGraves : JavaPlugin() {
             this, {
                 graveHandler.cleanupHardExpiredGraves()
                 graveHandler.writeGravesFile(dataFolder)
-                logger.info("Cleaned graves and written to disk")
+                if (pluginConfig.logCleanupTaskRuns)
+                    logger.info("Cleaned graves and written to disk")
             },
             pluginConfig.periodicCleanupDelayMinutes.toLong() * 60 * 20,
             pluginConfig.periodicCleanupPeriodMinutes.toLong() * 60 * 20
