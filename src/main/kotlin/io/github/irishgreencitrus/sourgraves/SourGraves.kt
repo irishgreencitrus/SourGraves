@@ -10,7 +10,9 @@ class SourGraves : JavaPlugin() {
         val plugin: SourGraves get() {
             return getPlugin(SourGraves::class.java)
         }
+        const val CONFIG_VERSION = 1
     }
+
 
     var graveHandler = GraveHandler()
     var pluginConfig = GraveConfig()
@@ -28,6 +30,10 @@ class SourGraves : JavaPlugin() {
     fun loadConfig() {
         val configFile = File(dataFolder, configFileName)
         pluginConfig = GraveConfig.fromFile(configFile)
+        if (pluginConfig.configVersion != CONFIG_VERSION) {
+            pluginConfig.configVersion = CONFIG_VERSION
+            writeConfig(true)
+        }
     }
 
 

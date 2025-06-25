@@ -10,6 +10,8 @@ import java.io.File
 
 @Serializable
 data class GraveConfig(
+    @TomlComment("There is no need to edit this manually, it just tells the plugin whether to rewrite the config after it has been updated.")
+    var configVersion: Int = SourGraves.CONFIG_VERSION,
     @TomlComment(
         "After this many minutes, the grave will be accessible by all players.\n" +
                 "Set to `-1` to disable this."
@@ -75,6 +77,7 @@ data class GraveConfig(
             #     It should not be ran too infrequently, as your graves will not be saved if the server crashes.
             #     The default should probably be fine, but it can be raised or lowered as necessary.   
             #
+            
         """.trimIndent() + toString()
     }
 }
