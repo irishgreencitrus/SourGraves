@@ -6,7 +6,7 @@ plugins {
 }
 val pluginName = "SourGraves"
 val minecraftVersion = properties.getOrDefault("minecraftVersion", "1.21")
-val pluginVersion = properties.getOrDefault("pluginVersion", "1.4.0")
+val pluginVersion = properties.getOrDefault("pluginVersion", "1.5.0")
 group = "io.github.irishgreencitrus"
 version = "$minecraftVersion-$pluginVersion"
 val paperApiVersion = "$minecraftVersion-R0.1-SNAPSHOT"
@@ -14,6 +14,7 @@ val paperApiVersion = "$minecraftVersion-R0.1-SNAPSHOT"
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.codemc.org/repository/maven-public/")
 }
 
 dependencies {
@@ -21,6 +22,7 @@ dependencies {
     implementation("net.peanuuutz.tomlkt:tomlkt:0.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
     compileOnly("io.papermc.paper:paper-api:$paperApiVersion")
+    compileOnly("net.milkbowl.vault:VaultUnlockedAPI:2.11")
 }
 
 tasks.test {

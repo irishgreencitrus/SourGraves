@@ -15,6 +15,12 @@ permissions:
   sourgraves.admin.settings:
     description: Allows you to use `/sourgraves settings`
     default: op
+  sourgraves.player.graveaccess:
+    description: A player with this permission can open any grave, regardless of whether it is public.
+    default: false
+  sourgraves.player.permagraves:
+    description: A player with this permission will have a grave that never expires.
+    default: false
   sourgraves.utils.player:
     description: Allows you to use `/sourgraves player`
     default: op

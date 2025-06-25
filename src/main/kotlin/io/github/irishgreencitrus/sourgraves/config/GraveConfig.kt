@@ -1,5 +1,6 @@
-package io.github.irishgreencitrus.sourgraves
+package io.github.irishgreencitrus.sourgraves.config
 
+import io.github.irishgreencitrus.sourgraves.SourGraves
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -46,7 +47,15 @@ data class GraveConfig(
     @TomlComment("Whether to send a player their grave coordinates once they respawn")
     var notifyCoordsOnRespawn: Boolean = false,
     @TomlComment("Whether to write a message to the console every time the cleanup task runs")
-    var logCleanupTaskRuns: Boolean = false
+    var logCleanupTaskRuns: Boolean = false,
+    @TomlComment(
+        "A list of the worlds that graves will *not* spawn in.\n" +
+                "This will lead to the default behaviour i.e. dropping items.\n" +
+                "Example values: ['world_nether']"
+    )
+    var disabledWorlds: List<String> = listOf(),
+    var sql: SqlConfig = SqlConfig(),
+    var economy: EconomyConfig = EconomyConfig(),
 ) {
     companion object {
         fun fromFile(f: File): GraveConfig {

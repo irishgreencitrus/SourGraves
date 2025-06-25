@@ -1,6 +1,7 @@
 package io.github.irishgreencitrus.sourgraves
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent
+import io.github.irishgreencitrus.sourgraves.config.PaymentType
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -15,6 +16,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
 import org.bukkit.persistence.PersistentDataType
+import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
@@ -61,11 +63,64 @@ class GraveListener : Listener {
         val graveUUID = UUID.fromString(armourStand.persistentDataContainer.get(key, PersistentDataType.STRING))
         val grave = SourGraves.plugin.graveHandler[graveUUID] ?: return
 
-        val canAccess = (e.player.uniqueId == grave.ownerUuid) || GraveHelper.isGravePublic(grave)
+        val playerIsOwner = e.player.uniqueId == grave.ownerUuid
+        val canAccess =
+            playerIsOwner || GraveHelper.isGravePublic(grave) || e.player.hasPermission("sourgraves.player.graveaccess")
 
         if (!canAccess) {
             e.player.sendMessage(Component.text("You can't access this grave").color(NamedTextColor.YELLOW))
             return
+        }
+
+        if (cfg.economy.enable) {
+            // FIXME(maybe)
+            //  we are assuming that a player's account UUID is the same as there UUID.
+            //  I *think* this is normally the case, but it's not always guaranteed.
+            //  If people start reporting bugs with economy have a look here.
+
+            val balance = SourGraves.economy?.balance(SourGraves.plugin.name, e.player.uniqueId) ?: BigDecimal.ZERO
+            val graveSize = SourGraves.plugin.graveHandler.graves[graveUUID]!!.items.size
+            val multiplier = if (cfg.economy.graveRecoverPaymentType == PaymentType.FLAT) 1 else graveSize
+            if (playerIsOwner) {
+                val recoverCost = BigDecimal.valueOf(cfg.economy.graveRecoverCost * multiplier)
+                if (balance >= recoverCost) {
+                    val response =
+                        SourGraves.economy?.withdraw(SourGraves.plugin.name, e.player.uniqueId, recoverCost)!!
+                    if (!response.transactionSuccess()) return
+                    e.player.sendMessage(
+                        Component.text(
+                            "Successfully recovered the grave for " + SourGraves.economy?.format(
+                                SourGraves.plugin.name,
+                                recoverCost
+                            )
+                        ).color(NamedTextColor.GREEN)
+                    )
+                } else {
+                    e.player.sendMessage(
+                        Component.text("You cannot afford to perform this action!").color(NamedTextColor.RED)
+                    )
+                    return
+                }
+            } else {
+                val robCost = BigDecimal.valueOf(cfg.economy.graveRobCost * multiplier)
+                if (balance >= BigDecimal.valueOf(cfg.economy.graveRobCost)) {
+                    val response = SourGraves.economy?.withdraw(SourGraves.plugin.name, e.player.uniqueId, robCost)!!
+                    if (!response.transactionSuccess()) return
+                    e.player.sendMessage(
+                        Component.text(
+                            "Successfully robbed the grave for " + SourGraves.economy?.format(
+                                SourGraves.plugin.name,
+                                robCost
+                            )
+                        ).color(NamedTextColor.GREEN)
+                    )
+                } else {
+                    e.player.sendMessage(
+                        Component.text("You cannot afford to perform this action!").color(NamedTextColor.RED)
+                    )
+                    return
+                }
+            }
         }
 
         armourStand.world.spawnParticle(Particle.valueOf(cfg.recoverParticle), armourStand.location.add(0.0,2.0,0.0), cfg.recoverParticleAmount)
