@@ -1,6 +1,7 @@
 package io.github.irishgreencitrus.sourgraves.sql
 
 import io.github.irishgreencitrus.sourgraves.SourGraves
+import io.github.irishgreencitrus.sourgraves.config.SqlConfig
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -11,7 +12,8 @@ object Database {
     @OptIn(ExperimentalSerializationApi::class)
     fun convertCurrentGravesToDatabase() {
         Class.forName("org.postgresql.Driver")
-        val cfg = SourGraves.plugin.pluginConfig.sql
+        //val cfg = SourGraves.plugin.pluginConfig.sql
+        val cfg = SqlConfig()
         try {
 
             DriverManager.getConnection(
@@ -72,7 +74,7 @@ object Database {
 
             }
         } catch (e: SQLException) {
-            SourGraves.plugin.logger.severe(e.message ?: "null");
+            SourGraves.plugin.logger.severe(e.message ?: "null")
         }
     }
 }

@@ -146,7 +146,7 @@ class GraveListener : Listener {
     @EventHandler
     fun onChunkLoad(e: ChunkLoadEvent) {
         if (e.isNewChunk) return
-        val toRemove = SourGraves.plugin.graveHandler.gravesToRemove;
+        val toRemove = SourGraves.plugin.graveHandler.gravesToRemove
         val coord = Pair(e.chunk.x, e.chunk.z)
         if (!toRemove.containsValue(coord)) return
 

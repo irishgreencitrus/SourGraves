@@ -146,7 +146,7 @@ class GraveHandler {
             return
         }
 
-        val cfg = SourGraves.plugin.pluginConfig;
+        val cfg = SourGraves.plugin.pluginConfig
 
         if ((tooManyGraves && cfg.dropItemsOnTooManyGraves) || cfg.dropItemsOnGraveDeletion) {
             val armourStandLocation = armourStand.location

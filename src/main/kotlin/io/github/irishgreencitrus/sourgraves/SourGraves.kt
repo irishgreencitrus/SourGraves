@@ -1,7 +1,6 @@
 package io.github.irishgreencitrus.sourgraves
 
 import io.github.irishgreencitrus.sourgraves.config.GraveConfig
-import io.github.irishgreencitrus.sourgraves.sql.Database
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.milkbowl.vault2.economy.Economy
 import org.bukkit.Bukkit
@@ -70,7 +69,7 @@ class SourGraves : JavaPlugin() {
         if (!setupEconomy() && pluginConfig.economy.enable) {
             logger.warning("Economy has been enabled, but Vault is not installed correctly.")
             logger.warning("Disabling all economy features.")
-            pluginConfig.economy.enable = false;
+            pluginConfig.economy.enable = false
         }
         graveHandler.loadGravesFile(dataFolder)
         if (pluginConfig.resetTimeoutOnStop) {
@@ -81,8 +80,10 @@ class SourGraves : JavaPlugin() {
             it.registrar().register(GraveCommand.createCommand().build())
         }
 
+        /*
         if (pluginConfig.sql.enable)
             Database.convertCurrentGravesToDatabase()
+         */
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(
             this, {
