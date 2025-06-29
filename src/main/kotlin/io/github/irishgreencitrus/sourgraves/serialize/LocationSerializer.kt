@@ -20,7 +20,7 @@ object LocationSerializer : KSerializer<Location> {
     }
 
     override fun serialize(encoder: Encoder, value: Location) {
-        val map = value.serialize().mapValues { it.toString() }
+        val map = value.serialize().mapValues { it.value.toString() }
         encoder.encodeSerializableValue(delegateSerializer, map)
     }
 }

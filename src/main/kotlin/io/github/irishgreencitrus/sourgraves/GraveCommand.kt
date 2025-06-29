@@ -242,22 +242,26 @@ object GraveCommand {
                             player.sendMessage(Component.text("You don't have any graves!").color(NamedTextColor.RED))
                             return@doesReturning 2
                         }
+
                         val gravesWithDistance = graves.map { g ->
                             val entity = player.server.getEntity(g.second.linkedArmourStandUuid)
-                            Triple(g.first, g.second, entity?.location)
+                            Triple(g.first, g.second, entity?.location ?: g.second.cachedLocation)
                         }.filter { t ->
-                            t.third != null && t.third?.world?.uid == player.world.uid
+                            t.third.world?.uid == player.world.uid
                         }.sortedBy { t ->
-                            val distance = t.third!!.distanceSquared(player.location)
+                            val distance = t.third.distanceSquared(player.location)
                             distance
                         }
-                        if (graves.isEmpty()) {
+
+                        if (gravesWithDistance.isEmpty()) {
                             player.sendMessage(
                                 Component.text("You don't have any graves in this dimension!").color(NamedTextColor.RED)
                             )
                             return@doesReturning 2
                         }
-                        val target = gravesWithDistance.first().third!!
+
+                        val target = gravesWithDistance.first().third
+
                         player.sendMessage(Component.text("Your nearest grave is at ${target.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }
@@ -270,22 +274,25 @@ object GraveCommand {
                             player.sendMessage(Component.text("You don't have any graves!").color(NamedTextColor.RED))
                             return@doesReturning 2
                         }
+
                         val gravesWithDistance = graves.map { g ->
                             val entity = player.server.getEntity(g.second.linkedArmourStandUuid)
-                            Triple(g.first, g.second, entity?.location)
+                            Triple(g.first, g.second, entity?.location ?: g.second.cachedLocation)
                         }.filter { t ->
-                            t.third != null && t.third?.world?.uid == player.world.uid
+                            t.third.world?.uid == player.world.uid
                         }.sortedByDescending { t ->
-                            val distance = t.third!!.distanceSquared(player.location)
+                            val distance = t.third.distanceSquared(player.location)
                             distance
                         }
-                        if (graves.isEmpty()) {
+
+                        if (gravesWithDistance.isEmpty()) {
                             player.sendMessage(
                                 Component.text("You don't have any graves in this dimension!").color(NamedTextColor.RED)
                             )
                             return@doesReturning 2
                         }
-                        val target = gravesWithDistance.first().third!!
+
+                        val target = gravesWithDistance.first().third
                         player.sendMessage(Component.text("Your furthest grave is at ${target.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }

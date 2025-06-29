@@ -33,15 +33,18 @@ object Database {
                 |    ownerUuid varchar(36) NOT NULL,
                 |    createdAtUnixTime bigint NOT NULL,
                 |    linkedArmourStandUuid varchar(36) NOT NULL,
-                |    cachedLocation text NOT NULL,
+                |    locationWorld text NOT NULL,
+                |    locationX double precision NOT NULL,
+                |    locationY double precision NOT NULL,
+                |    locationZ double precision NOT NULL,
                 |    PRIMARY KEY (graveUuid)
                 |);""".trimMargin()
                     )
                 }
 
                 val insertQuery =
-                    "INSERT INTO graves (graveUuid, items, ownerUuid, createdAtUnixTime, linkedArmourStandUuid)" +
-                            " VALUES (?, ?, ?, ?, ?);"
+                    "INSERT INTO graves (graveUuid, items, ownerUuid, createdAtUnixTime, linkedArmourStandUuid, locationWorld, locationX, locationY, locationZ)" +
+                            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
                 for (g in SourGraves.plugin.graveHandler.graves.entries) {
                     val itemStack = ProtoBuf { encodeDefaults = true }
                         .encodeToByteArray(
@@ -50,6 +53,7 @@ object Database {
                             .toMap()
                             .filterValues { it != null }
                         )
+
                     var skip = false
                     conn.prepareStatement("SELECT COUNT(*) FROM graves WHERE graveUuid = ?").use { stmt ->
                         stmt.setString(1, g.key.toString())
@@ -67,6 +71,10 @@ object Database {
                         stmt.setString(3, g.value.ownerUuid.toString())
                         stmt.setLong(4, g.value.createdAt.epochSecond)
                         stmt.setString(5, g.value.linkedArmourStandUuid.toString())
+                        stmt.setString(6, g.value.cachedLocation.world?.name ?: "")
+                        stmt.setDouble(7, g.value.cachedLocation.x)
+                        stmt.setDouble(8, g.value.cachedLocation.x)
+                        stmt.setDouble(9, g.value.cachedLocation.x)
                         stmt.executeUpdate()
                     }
                     SourGraves.plugin.logger.info("Processed grave ${g.key}")
