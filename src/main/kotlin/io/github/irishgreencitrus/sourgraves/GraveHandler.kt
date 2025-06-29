@@ -159,9 +159,12 @@ class GraveHandler {
     }
 
     fun cleanupHardExpiredGraves() {
-        graves.forEach { (u, g) ->
-            if (GraveHelper.isGraveQueuedForDeletion(g))
+        val iter = graves.iterator()
+        while (iter.hasNext()) {
+            val (u, g) = iter.next()
+            if (GraveHelper.isGraveQueuedForDeletion(g)) {
                 purgeGraveDropItems(u)
+            }
         }
     }
 
