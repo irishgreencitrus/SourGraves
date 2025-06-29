@@ -19,6 +19,10 @@ class GraveHandler {
     @Serializable
     var graves: HashMap<UUID, GraveData> = HashMap()
 
+    var gravesToRemove: HashMap<UUID, Pair<Int, Int>> = HashMap()
+
+    var graveWithInvalidCache = hashSetOf<UUID>()
+
     fun writeGravesFile(dataFolder: File) {
         val graveFile = File(dataFolder, "graves.json")
         graveFile.parentFile.mkdirs()
@@ -94,12 +98,15 @@ class GraveHandler {
 
     fun locateGrave(uuid: UUID): Pair<Location, GraveData>? {
         val grave = graves[uuid] ?: return null
-        val armourStand = SourGraves.plugin.server.getEntity(grave.linkedArmourStandUuid)
-        if (armourStand == null) {
-            SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid")
-            return null
+        val stand = GraveHelper.getArmourStandEntity(SourGraves.plugin.server, uuid)
+
+        if (stand != null) {
+            graveWithInvalidCache.remove(uuid)
+            grave.cachedLocation = stand.location
         }
-        return Pair(armourStand.location, grave)
+
+        if (grave.cachedLocation.world == null) return null
+        return Pair(grave.cachedLocation, grave)
     }
 
     private fun purgeGrave(uuid: UUID) {
@@ -109,12 +116,33 @@ class GraveHandler {
         removeGrave(uuid)
     }
 
-    fun purgeGraveDropItems(uuid: UUID, tooManyGraves: Boolean = false) {
+    fun purgeGraveDropItems(uuid: UUID, tooManyGraves: Boolean = false, chunkLoadEvent: Boolean = false) {
+        if (!chunkLoadEvent && gravesToRemove.containsKey(uuid)) return
+
         val grave = graves[uuid] ?: return
+        val loc = locateGrave(uuid)?.first
+        if (loc == null) {
+            graveWithInvalidCache.add(uuid)
+            return
+        }
+
+        if (loc.world == null) {
+            SourGraves.plugin.logger.warning("Location is invalid, it should")
+        }
+
+        if (!loc.isChunkLoaded) {
+            gravesToRemove[uuid] = Pair(loc.chunk.x, loc.chunk.z)
+            return
+        }
+
+        if (gravesToRemove.containsKey(uuid))
+            gravesToRemove.remove(uuid)
+
         val armourUuid = grave.linkedArmourStandUuid
         val armourStand = SourGraves.plugin.server.getEntity(armourUuid)
+
         if (armourStand == null) {
-            SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid")
+            SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid, but chunk is loaded. Perhaps it has been killed?")
             return
         }
 

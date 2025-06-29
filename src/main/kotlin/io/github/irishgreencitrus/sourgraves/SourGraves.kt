@@ -1,6 +1,7 @@
 package io.github.irishgreencitrus.sourgraves
 
 import io.github.irishgreencitrus.sourgraves.config.GraveConfig
+import io.github.irishgreencitrus.sourgraves.sql.Database
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.milkbowl.vault2.economy.Economy
 import org.bukkit.Bukkit
@@ -79,6 +80,9 @@ class SourGraves : JavaPlugin() {
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
             it.registrar().register(GraveCommand.createCommand().build())
         }
+
+        if (pluginConfig.sql.enable)
+            Database.convertCurrentGravesToDatabase()
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(
             this, {

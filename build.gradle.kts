@@ -11,6 +11,8 @@ group = "io.github.irishgreencitrus"
 version = "$minecraftVersion-$pluginVersion"
 val paperApiVersion = "$minecraftVersion-R0.1-SNAPSHOT"
 
+val exposedVersion: String by project
+
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -21,7 +23,10 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation("net.peanuuutz.tomlkt:tomlkt:0.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.8.0")
     compileOnly("io.papermc.paper:paper-api:$paperApiVersion")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.3.1")
+    implementation("org.postgresql:postgresql:42.7.7")
     compileOnly("net.milkbowl.vault:VaultUnlockedAPI:2.11")
 }
 

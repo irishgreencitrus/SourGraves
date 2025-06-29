@@ -15,6 +15,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
+import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.persistence.PersistentDataType
 import java.math.BigDecimal
 import java.time.Instant
@@ -46,7 +47,8 @@ class GraveListener : Listener {
             items = inv.contents.toList(),
             createdAt = Instant.now(),
             ownerUuid = e.player.uniqueId,
-            linkedArmourStandUuid = armourStand.uniqueId
+            linkedArmourStandUuid = armourStand.uniqueId,
+            cachedLocation = e.player.location
         )
 
     }
@@ -139,6 +141,30 @@ class GraveListener : Listener {
             e.player.world.dropItemNaturally(e.player.location,it)
         }
 
+    }
+
+    @EventHandler
+    fun onChunkLoad(e: ChunkLoadEvent) {
+        if (e.isNewChunk) return
+        val toRemove = SourGraves.plugin.graveHandler.gravesToRemove;
+        val coord = Pair(e.chunk.x, e.chunk.z)
+        if (!toRemove.containsValue(coord)) return
+
+        // If we've loaded a chunk with a grave with an invalid cache, update the cached location
+        val iter = SourGraves.plugin.graveHandler.graveWithInvalidCache.iterator()
+        while (iter.hasNext()) {
+            val it = iter.next()
+            val grave = SourGraves.plugin.graveHandler[it]!!
+            val entity = e.world.getEntity(it)
+            if (entity != null) {
+                grave.cachedLocation = entity.location
+                iter.remove()
+            }
+        }
+
+        toRemove.filterValues { it == coord }.forEach {
+            SourGraves.plugin.graveHandler.purgeGraveDropItems(it.key, chunkLoadEvent = true)
+        }
     }
 
     @EventHandler

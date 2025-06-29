@@ -48,12 +48,25 @@ object GraveHelper {
         return deletionDateTime.isBefore(Instant.now())
     }
 
+    fun getArmourStandEntity(server: Server, uuid: UUID): Entity? {
+        val entity = server.getEntity(uuid)
+        return entity
+    }
+
     fun getArmourStandEntity(server: Server, graveData: GraveData): Entity? {
         val entity = server.getEntity(graveData.linkedArmourStandUuid)
         return entity
     }
 
     fun getArmourStandLocation(server: Server, graveData: GraveData): Location? {
-        return getArmourStandEntity(server, graveData)?.location
+        val loc = getArmourStandEntity(server, graveData)?.location
+        if (loc != null)
+            graveData.cachedLocation = loc
+        return getArmourStandEntity(server, graveData)?.location ?: (
+                if (graveData.cachedLocation.world != null)
+                    graveData.cachedLocation
+                else
+                    null
+                )
     }
 }
