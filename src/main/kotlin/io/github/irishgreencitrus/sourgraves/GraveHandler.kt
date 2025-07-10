@@ -116,6 +116,7 @@ class GraveHandler {
         removeGrave(uuid)
     }
 
+    var messagePrinted = false
     fun purgeGraveDropItems(uuid: UUID, tooManyGraves: Boolean = false, chunkLoadEvent: Boolean = false) {
         if (!chunkLoadEvent && gravesToRemove.containsKey(uuid)) return
 
@@ -127,7 +128,10 @@ class GraveHandler {
         }
 
         if (loc.world == null) {
-            SourGraves.plugin.logger.warning("Location is invalid, it should")
+            if (!messagePrinted)
+                SourGraves.plugin.logger.warning("Armour stand location is invalid, this normally means you have upgraded from a version before 1.5.0.\nThis message will only be printed once.")
+            messagePrinted = true
+            return
         }
 
         if (!loc.isChunkLoaded) {

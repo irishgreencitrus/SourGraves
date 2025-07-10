@@ -54,14 +54,12 @@ data class GraveConfig(
                 "Example values: ['world_nether']"
     )
     var disabledWorlds: List<String> = listOf(),
-    /*
     @TomlComment(
         "Changing the sql options require you to restart the server.\n" +
                 "Also, if SQL is used, graves will be converted from the `graves.json` file and the file will not be updated again.\n" +
                 "However, the `graves.json` file will **not** be deleted."
     )
     var sql: SqlConfig = SqlConfig(),
-     */
     var economy: EconomyConfig = EconomyConfig(),
 ) {
     companion object {

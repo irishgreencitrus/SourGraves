@@ -71,10 +71,10 @@ object Database {
                         stmt.setString(3, g.value.ownerUuid.toString())
                         stmt.setLong(4, g.value.createdAt.epochSecond)
                         stmt.setString(5, g.value.linkedArmourStandUuid.toString())
-                        stmt.setString(6, g.value.cachedLocation.world?.name ?: "")
+                        stmt.setString(6, g.value.cachedLocation.world?.name)
                         stmt.setDouble(7, g.value.cachedLocation.x)
-                        stmt.setDouble(8, g.value.cachedLocation.x)
-                        stmt.setDouble(9, g.value.cachedLocation.x)
+                        stmt.setDouble(8, g.value.cachedLocation.y)
+                        stmt.setDouble(9, g.value.cachedLocation.z)
                         stmt.executeUpdate()
                     }
                     SourGraves.plugin.logger.info("Processed grave ${g.key}")
