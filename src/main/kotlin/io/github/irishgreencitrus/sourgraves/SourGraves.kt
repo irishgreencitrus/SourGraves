@@ -1,7 +1,8 @@
 package io.github.irishgreencitrus.sourgraves
 
 import io.github.irishgreencitrus.sourgraves.config.GraveConfig
-import io.github.irishgreencitrus.sourgraves.sql.Database
+import io.github.irishgreencitrus.sourgraves.storage.GraveStorage
+import io.github.irishgreencitrus.sourgraves.storage.MemoryOnlyStorage
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.milkbowl.vault2.economy.Economy
 import org.bukkit.Bukkit
@@ -18,9 +19,14 @@ class SourGraves : JavaPlugin() {
             get() {
                 return plugin.economy
             }
+        val storage: GraveStorage
+            get() {
+                return plugin.storage
+            }
         const val CONFIG_VERSION = 1
     }
 
+    lateinit var storage: GraveStorage
 
     var economy: Economy? = null
     var graveHandler = GraveHandler()
@@ -74,11 +80,13 @@ class SourGraves : JavaPlugin() {
             pluginConfig.economy.enable = false
         }
 
-        graveHandler.loadGravesFile(dataFolder)
+        storage = MemoryOnlyStorage()
+
+        // TODO: load specific storage here.
 
         if (pluginConfig.sql.enable) {
             if (!pluginConfig.sql.alreadyConvertedFromJson) {
-                Database.convertCurrentGravesToDatabase()
+                //Database.convertCurrentGravesToDatabase()
                 pluginConfig.sql.alreadyConvertedFromJson = true
             }
         }
@@ -86,7 +94,7 @@ class SourGraves : JavaPlugin() {
 
 
         if (pluginConfig.resetTimeoutOnStop) {
-            graveHandler.resetGraveTimers()
+            storage.resetGraveTimers()
         }
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
@@ -95,8 +103,8 @@ class SourGraves : JavaPlugin() {
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(
             this, {
-                graveHandler.cleanupHardExpiredGraves()
-                graveHandler.writeGravesFile(dataFolder)
+                storage.resetGraveTimers()
+                storage.sync()
                 if (pluginConfig.logCleanupTaskRuns)
                     logger.info("Cleaned graves and written to disk")
             },
@@ -110,7 +118,7 @@ class SourGraves : JavaPlugin() {
     override fun onDisable() {
         writeConfig(always = true)
 
-        graveHandler.writeGravesFile(dataFolder)
+        storage.sync()
 
         logger.info("irishgreencitrus' SourGraves have been disabled.")
     }

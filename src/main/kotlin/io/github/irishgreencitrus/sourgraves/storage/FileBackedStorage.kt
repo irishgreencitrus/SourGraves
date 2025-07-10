@@ -5,15 +5,19 @@ import java.io.File
 import java.util.*
 
 class FileBackedStorage(dataFolder: File) : GraveStorage() {
+    override fun contains(uuid: UUID): Boolean {
+        TODO("Not yet implemented")
+    }
+
     override fun count(): Int {
         TODO("Not yet implemented")
     }
 
-    override fun query(uuid: UUID): GraveData {
+    override fun query(uuid: UUID): GraveData? {
         TODO("Not yet implemented")
     }
 
-    override fun query(): HashMap<UUID, GraveData> {
+    override fun query(): Map<UUID, GraveData> {
         TODO("Not yet implemented")
     }
 
@@ -21,11 +25,23 @@ class FileBackedStorage(dataFolder: File) : GraveStorage() {
         TODO("Not yet implemented")
     }
 
-    override fun write(data: HashMap<UUID, GraveData>) {
+    override fun write(data: Map<UUID, GraveData>) {
         TODO("Not yet implemented")
     }
 
-    override fun delete(uuid: UUID) {
+    override fun delete(uuid: UUID): GraveData? {
+        TODO("Not yet implemented")
+    }
+
+    override fun resetGraveTimers() {
+        TODO("Not yet implemented")
+    }
+
+    override fun cleanupHardExpiredGraves() {
+        TODO("Not yet implemented")
+    }
+
+    override fun sync() {
         TODO("Not yet implemented")
     }
 }

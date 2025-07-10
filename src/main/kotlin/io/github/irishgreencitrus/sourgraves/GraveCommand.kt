@@ -29,7 +29,7 @@ object GraveCommand {
             literal("disk") {
                 literal("save") {
                     does {
-                        SourGraves.plugin.graveHandler.writeGravesFile(SourGraves.plugin.dataFolder)
+                        SourGraves.storage.sync()
                         it.source.sender.sendMessage(Component.text("Saved graves to disk!"))
                     }
                 }

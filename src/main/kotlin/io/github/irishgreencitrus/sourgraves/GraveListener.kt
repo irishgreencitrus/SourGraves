@@ -26,6 +26,7 @@ class GraveListener : Listener {
     @EventHandler(priority = EventPriority.HIGH)
     fun onPlayerDeath(e: PlayerDeathEvent) {
         val handl = SourGraves.plugin.graveHandler
+        val stor = SourGraves.storage
         val cfg = SourGraves.plugin.pluginConfig
         val inv = e.player.inventory
         if (inv.isEmpty) return
@@ -43,7 +44,7 @@ class GraveListener : Listener {
                 handl.purgeGraveDropItems(oldestGrave.first, tooManyGraves = true)
             }
         }
-        handl[graveId] = GraveData(
+        stor[graveId] = GraveData(
             items = inv.contents.toList(),
             createdAt = Instant.now(),
             ownerUuid = e.player.uniqueId,
@@ -63,7 +64,7 @@ class GraveListener : Listener {
         if (!armourStand.persistentDataContainer.has(key)) return
 
         val graveUUID = UUID.fromString(armourStand.persistentDataContainer.get(key, PersistentDataType.STRING))
-        val grave = SourGraves.plugin.graveHandler[graveUUID] ?: return
+        val grave = SourGraves.storage[graveUUID] ?: return
 
         val playerIsOwner = e.player.uniqueId == grave.ownerUuid
         val canAccess =
@@ -81,7 +82,7 @@ class GraveListener : Listener {
             //  If people start reporting bugs with economy have a look here.
 
             val balance = SourGraves.economy?.balance(SourGraves.plugin.name, e.player.uniqueId) ?: BigDecimal.ZERO
-            val graveSize = SourGraves.plugin.graveHandler.graves[graveUUID]!!.items.size
+            val graveSize = SourGraves.storage[graveUUID]!!.items.size
             val multiplier = if (cfg.economy.graveRecoverPaymentType == PaymentType.FLAT) 1 else graveSize
             if (playerIsOwner) {
                 val recoverCost = BigDecimal.valueOf(cfg.economy.graveRecoverCost * multiplier)
@@ -133,7 +134,7 @@ class GraveListener : Listener {
         armourStand.remove()
 
         val oldContents = e.player.inventory.contents.clone().filterNotNull()
-        val graveValue = SourGraves.plugin.graveHandler.removeGrave(graveUUID)!!
+        val graveValue = SourGraves.storage.delete(graveUUID)!!
         e.player.inventory.contents = graveValue.items.toTypedArray()
 
         val leftOvers = e.player.inventory.addItem(*oldContents.toTypedArray())
@@ -154,7 +155,7 @@ class GraveListener : Listener {
         val iter = SourGraves.plugin.graveHandler.graveWithInvalidCache.iterator()
         while (iter.hasNext()) {
             val it = iter.next()
-            val grave = SourGraves.plugin.graveHandler[it]!!
+            val grave = SourGraves.storage[it]!!
             val entity = e.world.getEntity(it)
             if (entity != null) {
                 grave.cachedLocation = entity.location

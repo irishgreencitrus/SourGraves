@@ -1,14 +1,7 @@
 package io.github.irishgreencitrus.sourgraves.sql
 
-import io.github.irishgreencitrus.sourgraves.SourGraves
-import io.github.irishgreencitrus.sourgraves.config.SqlConfig
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.encodeToByteArray
-import kotlinx.serialization.protobuf.ProtoBuf
-import java.sql.DriverManager
-import java.sql.SQLException
-
 object Database {
+    /*
     @OptIn(ExperimentalSerializationApi::class)
     fun convertCurrentGravesToDatabase() {
         Class.forName("org.postgresql.Driver")
@@ -85,4 +78,5 @@ object Database {
             SourGraves.plugin.logger.severe(e.message ?: "null")
         }
     }
+     */
 }
