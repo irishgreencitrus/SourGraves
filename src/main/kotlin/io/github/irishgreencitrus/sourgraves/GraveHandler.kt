@@ -1,54 +1,13 @@
 package io.github.irishgreencitrus.sourgraves
 
+import io.github.irishgreencitrus.sourgraves.SourGraves.Companion.storage
 import org.bukkit.Location
-import org.bukkit.OfflinePlayer
-import org.bukkit.entity.Player
 import java.util.*
 
 class GraveHandler {
-    private val storage = SourGraves.storage
-
     var gravesToRemove: HashMap<UUID, Pair<Int, Int>> = HashMap()
 
     var graveWithInvalidCache = hashSetOf<UUID>()
-
-    fun findOwnedGraves(player: OfflinePlayer) : Map<UUID,GraveData> {
-        return storage.query().filterValues { graveData ->
-            graveData.ownerUuid == player.uniqueId
-        }
-    }
-
-    fun findSameDimensionGraves(player: Player): Map<UUID, GraveData> {
-        return findOwnedGraves(player).filterValues { graveData ->
-            val armourStand = player.server.getEntity(graveData.linkedArmourStandUuid)
-            armourStand != null && armourStand.world.uid == player.world.uid
-        }
-    }
-
-    fun graveInPlayerDimension(player: Player, graveId: UUID): Boolean {
-        if (graveId !in storage) return false
-        val grave = storage[graveId]!!
-        val armourStand = player.server.getEntity(grave.linkedArmourStandUuid)
-        return armourStand != null && armourStand.world.uid == player.world.uid
-    }
-
-    fun playerSameDimensionGravesByAge(player: Player): List<Pair<UUID, GraveData>> {
-        return findSameDimensionGraves(player).toList().sortedBy {
-            it.second.createdAt
-        }
-    }
-
-    fun findOldestGrave(player: OfflinePlayer) : Pair<UUID, GraveData>? {
-        return findOwnedGraves(player).minByOrNull {
-            it.value.createdAt
-        }?.toPair()
-    }
-
-    fun findNewestGrave(player: OfflinePlayer): Pair<UUID, GraveData>? {
-        return findOwnedGraves(player).maxByOrNull {
-            it.value.createdAt
-        }?.toPair()
-    }
 
     fun locateGrave(uuid: UUID): Pair<Location, GraveData>? {
         val grave = storage[uuid] ?: return null

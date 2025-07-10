@@ -1,8 +1,8 @@
 package io.github.irishgreencitrus.sourgraves
 
 import io.github.irishgreencitrus.sourgraves.config.GraveConfig
+import io.github.irishgreencitrus.sourgraves.storage.FileBackedStorage
 import io.github.irishgreencitrus.sourgraves.storage.GraveStorage
-import io.github.irishgreencitrus.sourgraves.storage.MemoryOnlyStorage
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.milkbowl.vault2.economy.Economy
 import org.bukkit.Bukkit
@@ -80,7 +80,7 @@ class SourGraves : JavaPlugin() {
             pluginConfig.economy.enable = false
         }
 
-        storage = MemoryOnlyStorage()
+        storage = FileBackedStorage(dataFolder)
 
         // TODO: load specific storage here.
 
@@ -103,7 +103,7 @@ class SourGraves : JavaPlugin() {
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(
             this, {
-                storage.resetGraveTimers()
+                storage.cleanupHardExpiredGraves()
                 storage.sync()
                 if (pluginConfig.logCleanupTaskRuns)
                     logger.info("Cleaned graves and written to disk")

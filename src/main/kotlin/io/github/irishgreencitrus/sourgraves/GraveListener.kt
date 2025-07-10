@@ -37,10 +37,10 @@ class GraveListener : Listener {
 
         val armourStand = e.player.world.spawnEntity(e.player.location.subtract(0.0,1.3,0.0), EntityType.ARMOR_STAND) as ArmorStand
         GraveHelper.makeGraveArmourStand(armourStand, graveId, e.player, message = e.deathMessage() ?: Component.text("${e.player.name} died"))
-        val currentGraves = handl.findOwnedGraves(e.player)
+        val currentGraves = stor.searchPlayerGraves(e.player)
         if (cfg.maxGravesPerPlayer != -1) {
             if (currentGraves.size >= cfg.maxGravesPerPlayer) {
-                val oldestGrave = handl.findOldestGrave(e.player)!!
+                val oldestGrave = stor.oldestGrave(e.player)!!
                 handl.purgeGraveDropItems(oldestGrave.first, tooManyGraves = true)
             }
         }
@@ -77,7 +77,7 @@ class GraveListener : Listener {
 
         if (cfg.economy.enable) {
             // FIXME(maybe)
-            //  we are assuming that a player's account UUID is the same as there UUID.
+            //  we are assuming that a player's account UUID is the same as their UUID.
             //  I *think* this is normally the case, but it's not always guaranteed.
             //  If people start reporting bugs with economy have a look here.
 
@@ -173,7 +173,7 @@ class GraveListener : Listener {
         val cfg = SourGraves.plugin.pluginConfig
 
         if (!cfg.notifyCoordsOnRespawn) return
-        val grave = SourGraves.plugin.graveHandler.findNewestGrave(e.player) ?: return
+        val grave = SourGraves.storage.newestGrave(e.player) ?: return
         val locatedGrave = SourGraves.plugin.graveHandler.locateGrave(grave.first) ?: return
         val gravePos = locatedGrave.first
 

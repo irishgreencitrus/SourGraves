@@ -54,7 +54,7 @@ object GraveCommand {
                         does { ctx ->
                             val resolver = ctx.getArgument("target", PlayerSelectorArgumentResolver::class.java)
                             val player = resolver.resolve(ctx.source).first()
-                            val ownedGraves = SourGraves.plugin.graveHandler.findOwnedGraves(player)
+                            val ownedGraves = SourGraves.storage.searchPlayerGraves(player)
                             val ownedGravesPlural = if (ownedGraves.count() != 1) "s" else ""
                             ctx.source.sender.sendMessage(
                                 Component.text(player.name).color(NamedTextColor.GREEN)
@@ -72,7 +72,7 @@ object GraveCommand {
                                 val index = IntegerArgumentType.getInteger(ctx, "index")
                                 val resolver = ctx.getArgument("target", PlayerSelectorArgumentResolver::class.java)
                                 val player = resolver.resolve(ctx.source).first()
-                                val ownedGraves = SourGraves.plugin.graveHandler.findOwnedGraves(player).toList()
+                                val ownedGraves = SourGraves.storage.searchPlayerGraves(player).toList()
                                     .sortedBy { (_, second) -> second.createdAt }
                                 if (ownedGraves.isEmpty()) {
                                     ctx.source.sender.sendMessage(
@@ -90,17 +90,22 @@ object GraveCommand {
                                 }
 
                                 val (_, graveData) = ownedGraves[index]
-                                val graveEntity = SourGraves.plugin.server.getEntity(graveData.linkedArmourStandUuid)
-                                if (graveEntity == null) {
-                                    ctx.source.sender.sendMessage(
-                                        Component.text("Could not find grave location! Maybe the armour stand has been killed?")
-                                            .color(NamedTextColor.RED)
-                                    )
-                                    return@does
+                                var graveLocation = graveData.cachedLocation
+                                if (graveLocation.world == null) {
+                                    val graveEntity =
+                                        SourGraves.plugin.server.getEntity(graveData.linkedArmourStandUuid)
+                                    if (graveEntity == null) {
+                                        ctx.source.sender.sendMessage(
+                                            Component.text("Could not find grave location! Maybe the armour stand has been killed?")
+                                                .color(NamedTextColor.RED)
+                                        )
+                                        return@does
+                                    }
+                                    graveLocation = graveEntity.location
                                 }
-                                val x = graveEntity.x.roundToInt()
-                                val y = graveEntity.y.roundToInt() + 1
-                                val z = graveEntity.z.roundToInt()
+                                val x = graveLocation.x.roundToInt()
+                                val y = graveLocation.y.roundToInt() + 1
+                                val z = graveLocation.z.roundToInt()
 
                                 val msg = MiniMessage.miniMessage().deserialize(
                                     "<yellow>${player.name}</yellow>'s grave is at <hover:show_text:'Click to Teleport'><click:suggest_command:'/tp @s $x $y $z'><green>[$x, $y, $z]</green></click></hover>"
@@ -237,7 +242,7 @@ object GraveCommand {
                 literal("nearest") {
                     doesReturning { ctx ->
                         val player = ctx.source.executor as Player
-                        val graves = SourGraves.plugin.graveHandler.findOwnedGraves(player).toList()
+                        val graves = SourGraves.storage.searchPlayerGraves(player).toList()
                         if (graves.isEmpty()) {
                             player.sendMessage(Component.text("You don't have any graves!").color(NamedTextColor.RED))
                             return@doesReturning 2
@@ -269,7 +274,7 @@ object GraveCommand {
                 literal("furthest") {
                     doesReturning { ctx ->
                         val player = ctx.source.executor as Player
-                        val graves = SourGraves.plugin.graveHandler.findOwnedGraves(player).toList()
+                        val graves = SourGraves.storage.searchPlayerGraves(player).toList()
                         if (graves.isEmpty()) {
                             player.sendMessage(Component.text("You don't have any graves!").color(NamedTextColor.RED))
                             return@doesReturning 2
@@ -300,47 +305,47 @@ object GraveCommand {
                 literal("oldest") {
                     doesReturning { ctx ->
                         val player = ctx.source.executor as Player
-                        val hasGraves = SourGraves.plugin.graveHandler.findOwnedGraves(player).isNotEmpty()
+                        val hasGraves = SourGraves.storage.searchPlayerGraves(player).isNotEmpty()
                         if (!hasGraves) {
                             player.sendMessage(Component.text("You don't have any graves!").color(NamedTextColor.RED))
                             return@doesReturning 2
                         }
-                        val graves = SourGraves.plugin.graveHandler.playerSameDimensionGravesByAge(player).toList()
-                        if (graves.isEmpty()) {
+                        val grave = SourGraves.storage.oldestGrave(player, dimension = player.world.name)
+                        if (grave == null) {
                             player.sendMessage(
                                 Component.text("You don't have any graves in this dimension!").color(NamedTextColor.RED)
                             )
                             return@doesReturning 2
                         }
-                        val target = GraveHelper.getArmourStandLocation(player.server, graves.last().second)
-                        if (graves.isEmpty()) {
+                        val target = GraveHelper.getArmourStandLocation(player.server, grave.second)
+                        if (target == null) {
                             player.sendMessage(
                                 Component.text("The grave found was invalid, maybe the armour stand has been killed?")
                                     .color(NamedTextColor.RED)
                             )
                             return@doesReturning 2
                         }
-                        player.sendMessage(Component.text("Your oldest grave is at ${target!!.blockX} ${target.blockY} ${target.blockZ}"))
+                        player.sendMessage(Component.text("Your oldest grave is at ${target.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }
                 }
                 literal("newest") {
                     doesReturning { ctx ->
                         val player = ctx.source.executor as Player
-                        val hasGraves = SourGraves.plugin.graveHandler.findOwnedGraves(player).isNotEmpty()
+                        val hasGraves = SourGraves.storage.searchPlayerGraves(player).isNotEmpty()
                         if (!hasGraves) {
                             player.sendMessage(Component.text("You don't have any graves!").color(NamedTextColor.RED))
                             return@doesReturning 2
                         }
-                        val graves = SourGraves.plugin.graveHandler.playerSameDimensionGravesByAge(player).toList()
-                        if (graves.isEmpty()) {
+                        val grave = SourGraves.storage.newestGrave(player, dimension = player.world.name)
+                        if (grave == null) {
                             player.sendMessage(
                                 Component.text("You don't have any graves in this dimension!").color(NamedTextColor.RED)
                             )
                             return@doesReturning 2
                         }
-                        val target = GraveHelper.getArmourStandLocation(player.server, graves.last().second)
-                        if (graves.isEmpty()) {
+                        val target = GraveHelper.getArmourStandLocation(player.server, grave.second)
+                        if (target == null) {
                             player.sendMessage(
                                 Component.text("The grave found was invalid, maybe the armour stand has been killed?")
                                     .color(NamedTextColor.RED)
@@ -348,7 +353,7 @@ object GraveCommand {
                             return@doesReturning 2
                         }
 
-                        player.sendMessage(Component.text("Your newest grave is at ${target!!.blockX} ${target.blockY} ${target.blockZ}"))
+                        player.sendMessage(Component.text("Your newest grave is at ${target.blockX} ${target.blockY} ${target.blockZ}"))
                         Command.SINGLE_SUCCESS
                     }
                 }

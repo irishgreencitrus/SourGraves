@@ -19,6 +19,8 @@ data class GraveData(
             ItemStack?>,
     @Serializable(with = InstantSerializer::class)
     var createdAt: Instant,
+    @Serializable(with = InstantSerializer::class)
+    var timerStartedAt: Instant = Instant.now(),
     @Serializable(with = UUIDSerializer::class)
     val linkedArmourStandUuid: UUID,
     @Serializable(with = LocationSerializer::class)

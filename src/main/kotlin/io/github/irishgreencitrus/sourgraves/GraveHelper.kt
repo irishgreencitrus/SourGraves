@@ -37,14 +37,14 @@ object GraveHelper {
     fun isGravePublic(graveData: GraveData): Boolean {
         val cfg = SourGraves.plugin.pluginConfig
         if (cfg.publicInMinutes == -1) return false
-        val expiryDate = graveData.createdAt.plusSeconds(cfg.publicInMinutes.toLong() * 60)
+        val expiryDate = graveData.timerStartedAt.plusSeconds(cfg.publicInMinutes.toLong() * 60)
         return expiryDate.isBefore(Instant.now())
     }
 
     fun isGraveQueuedForDeletion(graveData: GraveData): Boolean {
         val cfg = SourGraves.plugin.pluginConfig
         if (cfg.deleteInMinutes == -1) return false
-        val deletionDateTime = graveData.createdAt.plusSeconds(cfg.deleteInMinutes.toLong() * 60)
+        val deletionDateTime = graveData.timerStartedAt.plusSeconds(cfg.deleteInMinutes.toLong() * 60)
         return deletionDateTime.isBefore(Instant.now())
     }
 
