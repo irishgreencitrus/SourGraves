@@ -3,7 +3,6 @@ package io.github.irishgreencitrus.sourgraves.storage
 import io.github.irishgreencitrus.sourgraves.GraveData
 import io.github.irishgreencitrus.sourgraves.GraveHelper
 import io.github.irishgreencitrus.sourgraves.SourGraves
-import java.time.Instant
 import java.util.*
 
 /*
@@ -12,6 +11,7 @@ import java.util.*
  */
 abstract class MemoryCachedStorage : GraveStorage() {
     protected var graves: HashMap<UUID, GraveData> = hashMapOf()
+    fun queryAll() = graves
 
     override operator fun contains(uuid: UUID): Boolean {
         return uuid in graves
@@ -24,20 +24,8 @@ abstract class MemoryCachedStorage : GraveStorage() {
         graves[uuid] = data
     }
 
-    override fun write(data: Map<UUID, GraveData>) {
-        graves = HashMap(data)
-    }
-
-    override fun delete(uuid: UUID): GraveData? {
-        return graves.remove(uuid)
-    }
-
-    override fun resetGraveTimers() {
-        val mutIter = graves.iterator()
-        while (mutIter.hasNext()) {
-            val data = mutIter.next()
-            data.value.timerStartedAt = Instant.now()
-        }
+    override fun delete(uuid: UUID) {
+        graves.remove(uuid)
     }
 
     override fun cleanupHardExpiredGraves() {

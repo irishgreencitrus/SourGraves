@@ -15,6 +15,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
+import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.persistence.PersistentDataType
 import java.math.BigDecimal
@@ -47,6 +48,7 @@ class GraveListener : Listener {
         stor[graveId] = GraveData(
             items = inv.contents.toList(),
             createdAt = Instant.now(),
+            timerStartedAtGameTime = e.player.world.gameTime,
             ownerUuid = e.player.uniqueId,
             linkedArmourStandUuid = armourStand.uniqueId,
             cachedLocation = e.player.location
@@ -134,8 +136,12 @@ class GraveListener : Listener {
         armourStand.remove()
 
         val oldContents = e.player.inventory.contents.clone().filterNotNull()
-        val graveValue = SourGraves.storage.delete(graveUUID)!!
-        e.player.inventory.contents = graveValue.items.toTypedArray()
+
+        // TODO: maybe give a warning here if the grave is already gone?
+        val data = SourGraves.storage[graveUUID] ?: return
+
+        SourGraves.storage.delete(graveUUID)
+        e.player.inventory.contents = data.items.toTypedArray()
 
         val leftOvers = e.player.inventory.addItem(*oldContents.toTypedArray())
         leftOvers.values.forEach {
@@ -181,6 +187,29 @@ class GraveListener : Listener {
             Component.text("Your most recent grave is at ${gravePos.blockX}, ${gravePos.blockY}, ${gravePos.blockZ} in ${gravePos.world.name}")
                 .color(NamedTextColor.YELLOW)
         )
+
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    fun onPlayerJoin(e: PlayerJoinEvent) {
+        if (e.player.isOp) {
+            when (SourGraves.plugin.storageFailure) {
+                SourGraves.StorageFailure.NONE -> {}
+                SourGraves.StorageFailure.SQL -> {
+                    e.player.sendMessage(
+                        Component.text("The graves SQL database failed to load. This should be investigated immediately.")
+                            .color(NamedTextColor.RED)
+                    )
+                }
+
+                SourGraves.StorageFailure.FILE -> {
+                    e.player.sendMessage(
+                        Component.text("The graves SQL database failed to load. This should be investigated immediately.")
+                            .color(NamedTextColor.RED)
+                    )
+                }
+            }
+        }
 
     }
 }

@@ -14,13 +14,14 @@ data class SqlConfig(
         "Supported SQL servers: MariaDB and PostgreSQL\n" +
                 "Google 'jdbc connection URL' to find out what to put here"
     )
-    var jdbcConnectionUri: String = "jdbc:sqlite:./graves.db",
-    @TomlComment(
-        "You can either use an tomlAuthFile or supply a username and password here.\n" +
-                "The auth file takes priority, so leave it blank if you don't want it to be used"
-    )
-    var tomlAuthFile: String = "",
+    var jdbcConnectionUri: String = "jdbc:postgres:",
     var username: String = "admin",
     var password: String = "changeme",
+    @TomlComment(
+        "Soft deletion will mean all grave data will stay in the database, and only ever be marked as deleted.\n" +
+                "This provides extra protection against item loss and allows complete recovery.\n" +
+                "Disabling this will not retroactively apply, and merely actually delete graves made after the change."
+    )
+    var softDeletion: Boolean = true,
     var alreadyConvertedFromJson: Boolean = false,
 )

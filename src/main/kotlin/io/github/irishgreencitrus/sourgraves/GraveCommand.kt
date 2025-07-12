@@ -115,6 +115,26 @@ object GraveCommand {
                             }
                         }
                     }
+
+                    // TODO: implement the give commands here.
+                    literal("give_to_me") {
+                        literal("by_index") {
+                            argument("index", IntegerArgumentType.integer(0)) {}
+                        }
+                        literal("newest") {}
+                        literal("oldest") {}
+                        literal("nearest") {}
+                        literal("furthest") {}
+                    }
+                    literal("give_to_them") {
+                        literal("by_index") {
+                            argument("index", IntegerArgumentType.integer(0)) {}
+                        }
+                        literal("newest") {}
+                        literal("oldest") {}
+                        literal("nearest") {}
+                        literal("furthest") {}
+                    }
                 }
                 requires {
                     it.sender.hasPermission("sourgraves.utils.player")

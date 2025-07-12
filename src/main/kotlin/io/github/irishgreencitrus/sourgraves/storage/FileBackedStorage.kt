@@ -1,6 +1,8 @@
 package io.github.irishgreencitrus.sourgraves.storage
 
+import io.github.irishgreencitrus.sourgraves.SourGraves
 import io.github.irishgreencitrus.sourgraves.serialize.UUIDSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import java.io.File
@@ -26,16 +28,26 @@ class FileBackedStorage(private val dataFolder: File) : MemoryCachedStorage() {
         serializersModule = module
     }
 
-    init {
+    override fun init(): Boolean {
         val graveFile = File(dataFolder, "graves.json")
-        if (graveFile.exists()) {
-            graves = serInstance.decodeFromString(graveFile.readText())
+        try {
+            if (graveFile.exists()) {
+                graves = serInstance.decodeFromString(graveFile.readText())
+            }
+        } catch (e: SerializationException) {
+            return false
+        } catch (e: IllegalArgumentException) {
+            return false
         }
+        if (graves.count() >= 100) {
+            SourGraves.plugin.logger.warning("There seems to be a > 100 graves loaded from `graves.json`. You may be better served switching to SQL.")
+        }
+        return true
     }
 
     // We assume that whatever is in memory is the ground-truth.
-    // If you don't like this assumption,
-    // you should choose another type of storage.
+    // If you don't like this assumption, you should choose another type of storage.
+    // This has been the case for every version of this plugin, but only documented here.
     override fun sync() {
         val graveFile = File(dataFolder, "graves.json")
         graveFile.parentFile.mkdirs()

@@ -42,8 +42,6 @@ data class GraveConfig(
     var periodicCleanupDelayMinutes: Int = 10,
     @TomlComment("How frequently the grave cleanup runs")
     var periodicCleanupPeriodMinutes: Int = 5,
-    @TomlComment("Whether to reset the grave timeout when the server stops")
-    var resetTimeoutOnStop: Boolean = false,
     @TomlComment("Whether to send a player their grave coordinates once they respawn")
     var notifyCoordsOnRespawn: Boolean = false,
     @TomlComment("Whether to write a message to the console every time the cleanup task runs")

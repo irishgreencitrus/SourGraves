@@ -19,8 +19,7 @@ data class GraveData(
             ItemStack?>,
     @Serializable(with = InstantSerializer::class)
     var createdAt: Instant,
-    @Serializable(with = InstantSerializer::class)
-    var timerStartedAt: Instant = Instant.now(),
+    var timerStartedAtGameTime: Long = 0L,
     @Serializable(with = UUIDSerializer::class)
     val linkedArmourStandUuid: UUID,
     @Serializable(with = LocationSerializer::class)
@@ -28,5 +27,7 @@ data class GraveData(
     // This prevents the plugin from breaking when updating.
     // In reality this should never be accessed directly because it could be wrong.
     // In a new server environment, this should never be wrong.
-    var cachedLocation: Location = Location(null, 0.0, 0.0, 0.0)
+    var cachedLocation: Location = Location(null, 0.0, 0.0, 0.0),
+    @Serializable(with = InstantSerializer::class)
+    val deletedAt: Instant? = null
 )

@@ -7,5 +7,6 @@ class MemoryOnlyStorage : MemoryCachedStorage() {
     /*
         This is not applicable for memory-only storage
      */
+    override fun init() = true
     override fun sync() = Unit
 }

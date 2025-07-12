@@ -13,6 +13,14 @@ abstract class GraveStorage {
         write(uuid, data)
     }
 
+    /**
+     * Call this before using the storage.
+     * The inheritor is responsible for deciding whether to create the storage or load it.
+     *
+     * @return Whether the storage was successfully initialised.
+     */
+    abstract fun init(): Boolean
+
     abstract operator fun contains(uuid: UUID): Boolean
 
     abstract fun count(): Int
@@ -22,8 +30,7 @@ abstract class GraveStorage {
     abstract fun query(uuid: UUID): GraveData?
 
     abstract fun write(uuid: UUID, data: GraveData)
-    abstract fun write(data: Map<UUID, GraveData>)
-    abstract fun delete(uuid: UUID): GraveData?
+    abstract fun delete(uuid: UUID)
 
     /**
      * Get a list of all the graves that belong to a given player.
@@ -63,22 +70,17 @@ abstract class GraveStorage {
         newestGrave(player.uniqueId, dimension)
 
     /**
-     *  This should reset all the grave timers to `Instant.now()`.
-     *  This prevents them from being deleted on a restart and gives a buffer zone.
-     */
-    abstract fun resetGraveTimers()
-
-    /*
-        The cleanup task has been moved to here.
-        This is where all the invalid graves should actually be removed.
+     * Remove all the graves that have expired.
+     *
+     * In some storages this will delete them permanently, in others they will be marked as inaccessible
      */
     abstract fun cleanupHardExpiredGraves()
 
-    /*
-        Any pending transactions should always be committed to disk here.
-        Think of it as flushing the buffer.
-        More resilient storages may want to call directly out to their storage in `write()` etc.
-        That would make this unimplemented.
+    /**
+     * After this function is called, all data should be persisted to the disk.
+     *
+     * It is acceptable for this function to do nothing, in which case the data is written to the persistent
+     * storage on every other call.
      */
     abstract fun sync()
 }

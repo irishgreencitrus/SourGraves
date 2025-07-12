@@ -9,7 +9,6 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.persistence.PersistentDataType
-import java.time.Instant
 import java.util.*
 
 object GraveHelper {
@@ -37,15 +36,17 @@ object GraveHelper {
     fun isGravePublic(graveData: GraveData): Boolean {
         val cfg = SourGraves.plugin.pluginConfig
         if (cfg.publicInMinutes == -1) return false
-        val expiryDate = graveData.timerStartedAt.plusSeconds(cfg.publicInMinutes.toLong() * 60)
-        return expiryDate.isBefore(Instant.now())
+        val expiryGameTime = graveData.timerStartedAtGameTime + cfg.publicInMinutes.toLong() * 60 * 20
+        return expiryGameTime < (graveData.cachedLocation.world?.gameTime
+            ?: SourGraves.plugin.server.worlds[0].gameTime)
     }
 
     fun isGraveQueuedForDeletion(graveData: GraveData): Boolean {
         val cfg = SourGraves.plugin.pluginConfig
         if (cfg.deleteInMinutes == -1) return false
-        val deletionDateTime = graveData.timerStartedAt.plusSeconds(cfg.deleteInMinutes.toLong() * 60)
-        return deletionDateTime.isBefore(Instant.now())
+        val deletionGameTime = graveData.timerStartedAtGameTime + cfg.deleteInMinutes.toLong() * 60 * 20
+        return deletionGameTime < (graveData.cachedLocation.world?.gameTime
+            ?: SourGraves.plugin.server.worlds[0].gameTime)
     }
 
     fun getArmourStandEntity(server: Server, uuid: UUID): Entity? {
@@ -53,7 +54,7 @@ object GraveHelper {
         return entity
     }
 
-    fun getArmourStandEntity(server: Server, graveData: GraveData): Entity? {
+    private fun getArmourStandEntity(server: Server, graveData: GraveData): Entity? {
         val entity = server.getEntity(graveData.linkedArmourStandUuid)
         return entity
     }
