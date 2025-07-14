@@ -4,6 +4,7 @@ import io.github.irishgreencitrus.sourgraves.config.GraveConfig
 import io.github.irishgreencitrus.sourgraves.storage.FileBackedStorage
 import io.github.irishgreencitrus.sourgraves.storage.GraveStorage
 import io.github.irishgreencitrus.sourgraves.storage.PostgresStorage
+import io.github.irishgreencitrus.sourgraves.storage.SQLStorage
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.milkbowl.vault2.economy.Economy
 import org.bukkit.Bukkit
@@ -89,7 +90,6 @@ class SourGraves : JavaPlugin() {
         }
 
 
-        // TODO: load specific storage here.
         var successfulStorage = false
         if (pluginConfig.sql.enable) {
             if ("postgres" in pluginConfig.sql.jdbcConnectionUri) {
@@ -98,19 +98,25 @@ class SourGraves : JavaPlugin() {
                 TODO("Add MySQL here")
             }
             successfulStorage = storage.init()
-            if (!pluginConfig.sql.alreadyConvertedFromJson) {
-                // TODO: add the conversion process here
-                pluginConfig.sql.alreadyConvertedFromJson = true
-            }
             if (!successfulStorage) {
                 logger.severe(
-                    "The SQL database failed to load correctly. `graves.json` will be used as backup.\n" +
-                            "Support will not be provided if this message appears in your log.\n" +
-                            "The plugin will now shutdown."
+                    "The SQL database failed to load correctly.\n" +
+                            "This is not a bug with the plugin, rather a problem the config / SQL server.\n" +
+                            "To prevent data loss, the plugin will be disabled."
                 )
                 storageFailure = StorageFailure.SQL
                 server.pluginManager.disablePlugin(this)
                 return
+            }
+
+            if (!pluginConfig.sql.alreadyConvertedFromJson && (storage is SQLStorage)) {
+                val oldStorage = FileBackedStorage(dataFolder)
+                if (oldStorage.init()) {
+                    (storage as SQLStorage).convertFrom(oldStorage)
+                    pluginConfig.sql.alreadyConvertedFromJson = true
+                } else {
+                    logger.warning("Failed to convert graves from `graves.json` to the SQL server")
+                }
             }
         }
 
@@ -120,8 +126,8 @@ class SourGraves : JavaPlugin() {
             if (!successfulStorage) {
                 logger.severe(
                     "File based storage failed to load properly.\n" +
-                            "Support will not be provided if this message appears in your log.\n" +
-                            "The plugin will now shutdown."
+                            "This is not a bug with the plugin, rather a problem the config / filesystem.\n" +
+                            "To prevent data loss, the plugin will now be disabled."
                 )
                 storageFailure = StorageFailure.FILE
                 server.pluginManager.disablePlugin(this)
@@ -137,14 +143,17 @@ class SourGraves : JavaPlugin() {
             this, {
                 storage.cleanupHardExpiredGraves()
                 storage.sync()
-                if (pluginConfig.logCleanupTaskRuns)
+                if (pluginConfig.logMessages.cleanupTask)
                     logger.info("Cleaned graves and written to disk")
             },
             pluginConfig.periodicCleanupDelayMinutes.toLong() * 60 * 20,
             pluginConfig.periodicCleanupPeriodMinutes.toLong() * 60 * 20
         )
+        if (pluginConfig.logMessages.startupMessage) {
+            logger.info("Thanks for using my plugin, report any bugs you find at https://github.com/irishgreencitrus/SourGraves/issues")
+            logger.info("Feel free to also join the Discord for help at https://discord.gg/B7Sd3eaTrs")
+        }
         logger.info("irishgreencitrus' SourGraves are ready.")
-        val a = server.worlds[0].gameTime
     }
 
 

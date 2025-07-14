@@ -24,10 +24,6 @@ class PostgresStorage : SQLStorage() {
     private lateinit var ds: HikariDataSource
     private val itemSer = ProtoBuf { encodeDefaults = true }
 
-    override fun convertFrom(oldStorage: MemoryCachedStorage) {
-        TODO("Not yet implemented")
-    }
-
     private val createStatement: String =
         """
             CREATE TABLE IF NOT EXISTS graves (
@@ -201,10 +197,15 @@ class PostgresStorage : SQLStorage() {
     }
 
     override fun searchPlayerGraves(playerUUID: UUID, dimension: String?): Map<UUID, GraveData> {
-        val sql = "SELECT * FROM graves WHERE ownerUuid = ? AND deletedAt IS NULL"
+        val sql = if (dimension == null)
+            "SELECT * FROM graves WHERE ownerUuid = ? AND deletedAt IS NULL"
+        else
+            "SELECT * FROM graves WHERE ownerUuid = ? AND locationWorld = ? AND deletedAt IS NULL"
         ds.connection.use { conn ->
             conn.prepareStatement(sql).use { stmt ->
                 stmt.setObject(1, playerUUID)
+                if (dimension != null)
+                    stmt.setString(2, dimension)
                 stmt.executeQuery().use { rs ->
                     val ret: HashMap<UUID, GraveData> = hashMapOf()
                     while (rs.next()) {
@@ -219,15 +220,51 @@ class PostgresStorage : SQLStorage() {
     }
 
     override fun oldestGrave(playerUUID: UUID, dimension: String?): Pair<UUID, GraveData>? {
+        val sql = if (dimension == null)
+            "SELECT * FROM graves WHERE ownerUuid = ? AND deletedAt IS NULL ORDER BY createdAt ASC LIMIT 1"
+        else
+            "SELECT * FROM graves WHERE ownerUuid = ? AND locationWorld = ? AND deletedAt IS NULL ORDER BY createdAt ASC LIMIT 1"
+        ds.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setObject(1, playerUUID)
+                if (dimension != null)
+                    stmt.setString(2, dimension)
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) {
+                        val uuid = rs.getObject("graveUuid", UUID::class.java)
+                        val gd = rs.toGraveData()
+                        return Pair(uuid, gd)
+                    }
+                }
+            }
+        }
         return null
     }
 
     override fun newestGrave(playerUUID: UUID, dimension: String?): Pair<UUID, GraveData>? {
+        val sql = if (dimension == null)
+            "SELECT * FROM graves WHERE ownerUuid = ? AND deletedAt IS NULL ORDER BY createdAt DESC LIMIT 1"
+        else
+            "SELECT * FROM graves WHERE ownerUuid = ? AND locationWorld = ? AND deletedAt IS NULL ORDER BY createdAt DESC LIMIT 1"
+        ds.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setObject(1, playerUUID)
+                if (dimension != null)
+                    stmt.setString(2, dimension)
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) {
+                        val uuid = rs.getObject("graveUuid", UUID::class.java)
+                        val gd = rs.toGraveData()
+                        return Pair(uuid, gd)
+                    }
+                }
+            }
+        }
         return null
     }
 
     override fun cleanupHardExpiredGraves() {
-
+        // TODO: delete graves that are too old and make them drop their items
     }
 
 

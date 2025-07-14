@@ -1,5 +1,6 @@
 package io.github.irishgreencitrus.sourgraves
 
+import io.github.irishgreencitrus.sourgraves.SourGraves.Companion.plugin
 import io.github.irishgreencitrus.sourgraves.SourGraves.Companion.storage
 import org.bukkit.Location
 import java.util.*
@@ -59,7 +60,8 @@ class GraveHandler {
         val armourStand = SourGraves.plugin.server.getEntity(armourUuid)
 
         if (armourStand == null) {
-            SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid, but chunk is loaded. Perhaps it has been killed?")
+            if (plugin.pluginConfig.logMessages.armourStandNotFoundOnGravePurge)
+                SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid, but chunk is loaded. Perhaps it has been killed?")
             return
         }
 

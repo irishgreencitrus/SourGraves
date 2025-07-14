@@ -39,8 +39,8 @@ class FileBackedStorage(private val dataFolder: File) : MemoryCachedStorage() {
         } catch (e: IllegalArgumentException) {
             return false
         }
-        if (graves.count() >= 100) {
-            SourGraves.plugin.logger.warning("There seems to be a > 100 graves loaded from `graves.json`. You may be better served switching to SQL.")
+        if (graves.count() >= 100 && SourGraves.plugin.pluginConfig.logMessages.moreThan100GravesWarning) {
+            SourGraves.plugin.logger.warning("There seems to be at least 100 graves loaded from `graves.json`.\nYou may be better served switching to SQL.")
         }
         return true
     }

@@ -30,6 +30,7 @@ class GraveListener : Listener {
         val stor = SourGraves.storage
         val cfg = SourGraves.plugin.pluginConfig
         val inv = e.player.inventory
+        if (e.player.world.name in cfg.disabledWorlds) return
         if (inv.isEmpty) return
         if (e.keepInventory) return
 

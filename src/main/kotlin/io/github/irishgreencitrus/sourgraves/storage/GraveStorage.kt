@@ -5,10 +5,16 @@ import org.bukkit.OfflinePlayer
 import java.util.*
 
 abstract class GraveStorage {
+    /**
+     * Alias for `query(UUID): GraveData?`
+     */
     operator fun get(uuid: UUID): GraveData? {
         return query(uuid)
     }
 
+    /**
+     * Alias for `write(UUID, GraveData)`
+     */
     operator fun set(uuid: UUID, data: GraveData) {
         write(uuid, data)
     }

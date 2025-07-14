@@ -44,8 +44,10 @@ data class GraveConfig(
     var periodicCleanupPeriodMinutes: Int = 5,
     @TomlComment("Whether to send a player their grave coordinates once they respawn")
     var notifyCoordsOnRespawn: Boolean = false,
-    @TomlComment("Whether to write a message to the console every time the cleanup task runs")
-    var logCleanupTaskRuns: Boolean = false,
+    @TomlComment("If this is `true`, the default Right-Click will now open an inventory.\nYou can use Shift-Right-Click to restore the grave as normal.")
+    var allowChestLikeGraveAccess: Boolean = false,
+    @TomlComment("Swaps the behaviour of normal and shift clicking when `allowChestLikeGraveAccess` is `true`")
+    var chestAccessSwapNormalAndShift: Boolean = false,
     @TomlComment(
         "A list of the worlds that graves will *not* spawn in.\n" +
                 "This will lead to the default behaviour i.e. dropping items.\n" +
@@ -59,6 +61,11 @@ data class GraveConfig(
     )
     var sql: SqlConfig = SqlConfig(),
     var economy: EconomyConfig = EconomyConfig(),
+    @TomlComment(
+        "Change anything in here if you find the log messages too invasive.\n" +
+                "Some log messages cannot be disabled as they convey important information."
+    )
+    var logMessages: LogMessagesConfig = LogMessagesConfig()
 ) {
     companion object {
         fun fromFile(f: File): GraveConfig {
