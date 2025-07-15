@@ -1,8 +1,8 @@
 package io.github.irishgreencitrus.sourgraves
 
 import io.github.irishgreencitrus.sourgraves.config.GraveConfig
-import io.github.irishgreencitrus.sourgraves.storage.FileBackedStorage
 import io.github.irishgreencitrus.sourgraves.storage.GraveStorage
+import io.github.irishgreencitrus.sourgraves.storage.LegacyFileStorage
 import io.github.irishgreencitrus.sourgraves.storage.PostgresStorage
 import io.github.irishgreencitrus.sourgraves.storage.SQLStorage
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
@@ -70,14 +70,6 @@ class SourGraves : JavaPlugin() {
         return true
     }
 
-    enum class StorageFailure {
-        NONE,
-        SQL,
-        FILE,
-    }
-
-    var storageFailure: StorageFailure = StorageFailure.NONE
-
     @Suppress("UnstableApiUsage")
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(GraveListener(), this)
@@ -104,13 +96,12 @@ class SourGraves : JavaPlugin() {
                             "This is not a bug with the plugin, rather a problem the config / SQL server.\n" +
                             "To prevent data loss, the plugin will be disabled."
                 )
-                storageFailure = StorageFailure.SQL
                 server.pluginManager.disablePlugin(this)
                 return
             }
 
             if (!pluginConfig.sql.alreadyConvertedFromJson && (storage is SQLStorage)) {
-                val oldStorage = FileBackedStorage(dataFolder)
+                val oldStorage = LegacyFileStorage(dataFolder)
                 if (oldStorage.init()) {
                     (storage as SQLStorage).convertFrom(oldStorage)
                     pluginConfig.sql.alreadyConvertedFromJson = true
@@ -121,7 +112,7 @@ class SourGraves : JavaPlugin() {
         }
 
         if (!::storage.isInitialized || !successfulStorage) {
-            storage = FileBackedStorage(dataFolder)
+            storage = LegacyFileStorage(dataFolder)
             successfulStorage = storage.init()
             if (!successfulStorage) {
                 logger.severe(
@@ -129,11 +120,12 @@ class SourGraves : JavaPlugin() {
                             "This is not a bug with the plugin, rather a problem the config / filesystem.\n" +
                             "To prevent data loss, the plugin will now be disabled."
                 )
-                storageFailure = StorageFailure.FILE
                 server.pluginManager.disablePlugin(this)
                 return
             }
         }
+
+        Class.forName("org.sqlite.JDBC");
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
             it.registrar().register(GraveCommand.createCommand().build())

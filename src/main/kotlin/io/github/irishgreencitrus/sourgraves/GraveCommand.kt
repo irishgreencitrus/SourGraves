@@ -248,7 +248,7 @@ object GraveCommand {
                 literal("log_cleanup_task_runs") {
                     argument("value", BoolArgumentType.bool()) {
                         does { ctx ->
-                            SourGraves.plugin.pluginConfig.logCleanupTaskRuns =
+                            SourGraves.plugin.pluginConfig.logMessages.cleanupTask =
                                 BoolArgumentType.getBool(ctx, "value")
                             updateConfigAndSave(ctx)
                         }

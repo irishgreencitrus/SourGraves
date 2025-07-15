@@ -14,7 +14,7 @@ import java.util.*
 data class GraveData(
     @Serializable(with = UUIDSerializer::class)
     val ownerUuid: UUID,
-    val items: List<
+    var items: List<
             @Serializable(with = ItemStackSerializer::class)
             ItemStack?>,
     @Serializable(with = InstantSerializer::class)

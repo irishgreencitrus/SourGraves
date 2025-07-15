@@ -18,7 +18,7 @@ import java.util.*
     If you have a large server, or very critical data (i.e. more than an SMP with a few people in)
     I'd suggest using SQL based storage instead.
  */
-class FileBackedStorage(private val dataFolder: File) : MemoryCachedStorage() {
+class LegacyFileStorage(private val dataFolder: File) : MemoryCachedStorage() {
     private val module = SerializersModule {
         contextual(UUID::class, UUIDSerializer)
     }

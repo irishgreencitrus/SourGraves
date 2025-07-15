@@ -3,6 +3,7 @@ package io.github.irishgreencitrus.sourgraves.storage
 import io.github.irishgreencitrus.sourgraves.GraveData
 import io.github.irishgreencitrus.sourgraves.GraveHelper
 import io.github.irishgreencitrus.sourgraves.SourGraves
+import org.bukkit.inventory.ItemStack
 import java.util.*
 
 /*
@@ -22,6 +23,10 @@ abstract class MemoryCachedStorage : GraveStorage() {
 
     override fun write(uuid: UUID, data: GraveData) {
         graves[uuid] = data
+    }
+
+    override fun updateItems(uuid: UUID, items: List<ItemStack?>) {
+        graves[uuid]?.items = items
     }
 
     override fun delete(uuid: UUID) {

@@ -1,6 +1,8 @@
 package io.github.irishgreencitrus.sourgraves
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent
+import io.github.irishgreencitrus.sourgraves.SourGraves.Companion.plugin
+import io.github.irishgreencitrus.sourgraves.SourGraves.Companion.storage
 import io.github.irishgreencitrus.sourgraves.config.PaymentType
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -10,12 +12,14 @@ import org.bukkit.NamespacedKey
 import org.bukkit.Particle
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
-import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.persistence.PersistentDataType
 import java.math.BigDecimal
@@ -24,18 +28,23 @@ import java.util.*
 
 class GraveListener : Listener {
 
-    @EventHandler(priority = EventPriority.HIGH)
+    private val graveSnapshot: HashMap<UUID, Pair<UUID, GraveData>> = hashMapOf()
+
+    @EventHandler(priority = EventPriority.LOWEST)
     fun onPlayerDeath(e: PlayerDeathEvent) {
-        val handl = SourGraves.plugin.graveHandler
+        val handl = plugin.graveHandler
         val stor = SourGraves.storage
-        val cfg = SourGraves.plugin.pluginConfig
+        val cfg = plugin.pluginConfig
         val inv = e.player.inventory
         if (e.player.world.name in cfg.disabledWorlds) return
+        if (e.isCancelled) return
+        if (cfg.disableForPvpKills) {
+            if (e.player.killer != null) return
+            if (e.damageSource.causingEntity is Player) return
+        }
         if (inv.isEmpty) return
-        if (e.keepInventory) return
 
         val graveId = UUID.randomUUID()
-        e.drops.clear()
 
         val armourStand = e.player.world.spawnEntity(e.player.location.subtract(0.0,1.3,0.0), EntityType.ARMOR_STAND) as ArmorStand
         GraveHelper.makeGraveArmourStand(armourStand, graveId, e.player, message = e.deathMessage() ?: Component.text("${e.player.name} died"))
@@ -46,21 +55,46 @@ class GraveListener : Listener {
                 handl.purgeGraveDropItems(oldestGrave.first, tooManyGraves = true)
             }
         }
-        stor[graveId] = GraveData(
-            items = inv.contents.toList(),
+
+        val player = e.player
+
+        graveSnapshot[player.uniqueId] = Pair(
+            graveId, GraveData(
+                items = player.inventory.contents.toList(),
             createdAt = Instant.now(),
             timerStartedAtGameTime = e.player.world.gameTime,
             ownerUuid = e.player.uniqueId,
             linkedArmourStandUuid = armourStand.uniqueId,
             cachedLocation = e.player.location
+            )
         )
+    }
 
+    // Why do we do it like this?
+    // We want to prevent Bukkit or other plugins from modifying our drops, but they could also affect
+    // whether we need to actually create a grave, i.e. with keepInventory on.
+    // Otherwise, we could accidentally duplicate items.
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    fun afterPlayerDeath(e: PlayerDeathEvent) {
+        if (e.keepInventory || e.isCancelled) {
+            graveSnapshot.remove(e.player.uniqueId)
+            return
+        }
+
+        // Once we've made a grave, only then commit it to storage permanently
+        val (graveId, graveData) = graveSnapshot.remove(e.player.uniqueId) ?: return
+        plugin.storage[graveId] = graveData
+        e.drops.clear()
+
+        // graveSnapshot should be empty by the time we reach here.
     }
 
     @EventHandler
     fun onPlayerInteractAtEntity(e: PlayerInteractAtEntityEvent) {
         if (e.rightClicked.type != EntityType.ARMOR_STAND) return
-        val cfg = SourGraves.plugin.pluginConfig
+        val shiftClick = e.player.isSneaking
+
+        val cfg = plugin.pluginConfig
 
         val armourStand: ArmorStand = e.rightClicked as ArmorStand
         val key = NamespacedKey(SourGraves.plugin, "sour_grave_id")
@@ -129,37 +163,55 @@ class GraveListener : Listener {
             }
         }
 
+        if (cfg.allowChestLikeGraveAccess) {
+            if (shiftClick) restoreGrave(e.player, graveUUID, armourStand)
+            else openGraveInventory(e.player, graveUUID, armourStand)
+        } else {
+            restoreGrave(e.player, graveUUID, armourStand)
+        }
+    }
+
+    private fun restoreGrave(player: Player, graveUUID: UUID, armourStand: ArmorStand) {
+        val cfg = plugin.pluginConfig
+
         armourStand.world.spawnParticle(Particle.valueOf(cfg.recoverParticle), armourStand.location.add(0.0,2.0,0.0), cfg.recoverParticleAmount)
 
-        e.player.playSound(
+        player.playSound(
             Sound.sound(
                 Key.key(cfg.recoverSound), Sound.Source.PLAYER, 1f, 1f))
         armourStand.remove()
 
-        val oldContents = e.player.inventory.contents.clone().filterNotNull()
+        val oldContents = player.inventory.contents.clone().filterNotNull()
 
         // TODO: maybe give a warning here if the grave is already gone?
         val data = SourGraves.storage[graveUUID] ?: return
 
         SourGraves.storage.delete(graveUUID)
-        e.player.inventory.contents = data.items.toTypedArray()
+        player.inventory.contents = data.items.toTypedArray()
 
-        val leftOvers = e.player.inventory.addItem(*oldContents.toTypedArray())
+
+        val leftOvers = player.inventory.addItem(*oldContents.toTypedArray())
         leftOvers.values.forEach {
-            e.player.world.dropItemNaturally(e.player.location,it)
+            player.world.dropItemNaturally(player.location, it)
         }
+    }
 
+    private fun openGraveInventory(player: Player, graveUUID: UUID, armourStand: ArmorStand) {
+        if (graveUUID !in storage) return
+        val name = player.displayName().append(Component.text("'s Grave"))
+        val inv = GraveInventory(graveUUID, name)
+        player.openInventory(inv.inventory)
     }
 
     @EventHandler
     fun onChunkLoad(e: ChunkLoadEvent) {
         if (e.isNewChunk) return
-        val toRemove = SourGraves.plugin.graveHandler.gravesToRemove
+        val toRemove = plugin.graveHandler.gravesToRemove
         val coord = Pair(e.chunk.x, e.chunk.z)
         if (!toRemove.containsValue(coord)) return
 
         // If we've loaded a chunk with a grave with an invalid cache, update the cached location
-        val iter = SourGraves.plugin.graveHandler.graveWithInvalidCache.iterator()
+        val iter = plugin.graveHandler.graveWithInvalidCache.iterator()
         while (iter.hasNext()) {
             val it = iter.next()
             val grave = SourGraves.storage[it]!!
@@ -177,7 +229,7 @@ class GraveListener : Listener {
 
     @EventHandler
     fun onPlayerRespawn(e: PlayerPostRespawnEvent) {
-        val cfg = SourGraves.plugin.pluginConfig
+        val cfg = plugin.pluginConfig
 
         if (!cfg.notifyCoordsOnRespawn) return
         val grave = SourGraves.storage.newestGrave(e.player) ?: return
@@ -188,29 +240,30 @@ class GraveListener : Listener {
             Component.text("Your most recent grave is at ${gravePos.blockX}, ${gravePos.blockY}, ${gravePos.blockZ} in ${gravePos.world.name}")
                 .color(NamedTextColor.YELLOW)
         )
-
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
-    fun onPlayerJoin(e: PlayerJoinEvent) {
-        if (e.player.isOp) {
-            when (SourGraves.plugin.storageFailure) {
-                SourGraves.StorageFailure.NONE -> {}
-                SourGraves.StorageFailure.SQL -> {
-                    e.player.sendMessage(
-                        Component.text("The graves SQL database failed to load. This should be investigated immediately.")
-                            .color(NamedTextColor.RED)
-                    )
-                }
-
-                SourGraves.StorageFailure.FILE -> {
-                    e.player.sendMessage(
-                        Component.text("The graves SQL database failed to load. This should be investigated immediately.")
-                            .color(NamedTextColor.RED)
-                    )
-                }
-            }
+    @EventHandler
+    fun onInventoryOpen(event: InventoryOpenEvent) {
+        if (event.inventory.holder == null) return
+        if (event.inventory.holder !is GraveInventory) return
+        val holder = event.inventory.holder as GraveInventory
+        if (event.inventory != holder.inventory) return
+        storage.query(holder.graveUuid)?.items?.forEachIndexed { i, item ->
+            holder.inventory.setItem(i, item)
         }
+    }
 
+    @EventHandler
+    fun onInventoryClose(event: InventoryCloseEvent) {
+        if (event.inventory.holder == null) return
+        if (event.inventory.holder !is GraveInventory) return
+        val holder = event.inventory.holder as GraveInventory
+
+        // There's not much point updating the stored items if we're going to purge the grave anyway
+        if (holder.inventory.contents.all { it == null }) {
+            plugin.graveHandler.purgeGraveDropItems(holder.graveUuid, canDropItems = false)
+            return
+        }
+        storage.updateItems(holder.graveUuid, holder.inventory.contents.toList())
     }
 }

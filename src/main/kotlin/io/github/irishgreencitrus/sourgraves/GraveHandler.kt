@@ -12,7 +12,7 @@ class GraveHandler {
 
     fun locateGrave(uuid: UUID): Pair<Location, GraveData>? {
         val grave = storage[uuid] ?: return null
-        val stand = GraveHelper.getArmourStandEntity(SourGraves.plugin.server, uuid)
+        val stand = GraveHelper.getArmourStandEntity(plugin.server, uuid)
 
         if (stand != null) {
             graveWithInvalidCache.remove(uuid)
@@ -25,13 +25,18 @@ class GraveHandler {
 
     private fun purgeGrave(uuid: UUID) {
         val armourUuid = storage[uuid]!!.linkedArmourStandUuid
-        val armourStand = SourGraves.plugin.server.getEntity(armourUuid)
+        val armourStand = plugin.server.getEntity(armourUuid)
         armourStand?.remove()
         storage.delete(uuid)
     }
 
     private var messagePrinted = false
-    fun purgeGraveDropItems(uuid: UUID, tooManyGraves: Boolean = false, chunkLoadEvent: Boolean = false) {
+    fun purgeGraveDropItems(
+        uuid: UUID,
+        tooManyGraves: Boolean = false,
+        chunkLoadEvent: Boolean = false,
+        canDropItems: Boolean = true
+    ) {
         if (!chunkLoadEvent && gravesToRemove.containsKey(uuid)) return
 
         val grave = storage[uuid] ?: return
@@ -43,7 +48,7 @@ class GraveHandler {
 
         if (loc.world == null) {
             if (!messagePrinted)
-                SourGraves.plugin.logger.warning("Armour stand location is invalid, this normally means you have upgraded from a version before 1.5.0.\nThis message will only be printed once.")
+                plugin.logger.warning("Armour stand location is invalid, this normally means you have upgraded from a version before 1.5.0.\nThis message will only be printed once.")
             messagePrinted = true
             return
         }
@@ -57,17 +62,19 @@ class GraveHandler {
             gravesToRemove.remove(uuid)
 
         val armourUuid = grave.linkedArmourStandUuid
-        val armourStand = SourGraves.plugin.server.getEntity(armourUuid)
+        val armourStand = plugin.server.getEntity(armourUuid)
 
         if (armourStand == null) {
             if (plugin.pluginConfig.logMessages.armourStandNotFoundOnGravePurge)
-                SourGraves.plugin.logger.warning("Armour stand not found with uuid $uuid, but chunk is loaded. Perhaps it has been killed?")
+                plugin.logger.warning("Armour stand not found with uuid $uuid, but chunk is loaded. Perhaps it has been killed?")
             return
         }
 
-        val cfg = SourGraves.plugin.pluginConfig
+        val cfg = plugin.pluginConfig
 
-        if ((tooManyGraves && cfg.dropItemsOnTooManyGraves) || cfg.dropItemsOnGraveDeletion) {
+        if (canDropItems &&
+            ((tooManyGraves && cfg.dropItemsOnTooManyGraves) || cfg.dropItemsOnGraveDeletion)
+        ) {
             val armourStandLocation = armourStand.location
             grave.items.filterNotNull().forEach {
                 armourStand.world.dropItemNaturally(armourStandLocation, it)

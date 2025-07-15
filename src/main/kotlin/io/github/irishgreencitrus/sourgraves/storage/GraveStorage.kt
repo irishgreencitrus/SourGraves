@@ -2,6 +2,7 @@ package io.github.irishgreencitrus.sourgraves.storage
 
 import io.github.irishgreencitrus.sourgraves.GraveData
 import org.bukkit.OfflinePlayer
+import org.bukkit.inventory.ItemStack
 import java.util.*
 
 abstract class GraveStorage {
@@ -34,7 +35,7 @@ abstract class GraveStorage {
     // There is no way to query the entire database at once anymore.
     // This is by design.
     abstract fun query(uuid: UUID): GraveData?
-
+    abstract fun updateItems(uuid: UUID, items: List<ItemStack?>)
     abstract fun write(uuid: UUID, data: GraveData)
     abstract fun delete(uuid: UUID)
 

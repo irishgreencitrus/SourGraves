@@ -28,6 +28,8 @@ data class GraveConfig(
             + "Set to `-1` to disable this"
     )
     var maxGravesPerPlayer: Int = 3,
+    @TomlComment("Whether to prevent graves being created for PvP kills")
+    var disableForPvpKills: Boolean = false,
     @TomlComment("Whether to drop the items of the oldest grave once a player has exceeded max graves")
     var dropItemsOnTooManyGraves: Boolean = true,
     @TomlComment("Whether to drop the items of a just-deleted grave. If false, the items just disappear")
@@ -56,8 +58,8 @@ data class GraveConfig(
     var disabledWorlds: List<String> = listOf(),
     @TomlComment(
         "Changing the sql options require you to restart the server.\n" +
-                "Also, if SQL is used, graves will be converted from the `graves.json` file and the file will not be updated again.\n" +
-                "However, the `graves.json` file will **not** be deleted."
+                "If SQL is used, graves will be converted from the `graves.json` file and the file will not be updated again.\n" +
+                "The `graves.json` file will **not** be deleted."
     )
     var sql: SqlConfig = SqlConfig(),
     var economy: EconomyConfig = EconomyConfig(),

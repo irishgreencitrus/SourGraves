@@ -152,6 +152,23 @@ class PostgresStorage : SQLStorage() {
         }
     }
 
+    override fun updateItems(uuid: UUID, items: List<ItemStack?>) {
+        val updateSql = """
+            UPDATE graves
+            SET items = ?
+            WHERE graveUuid = ?
+        """.trimIndent()
+        ds.connection.use { conn ->
+            conn.prepareStatement(updateSql).use { stmt ->
+                var i = 1
+                stmt.setBytes(i++, itemStackListToByteArray(items))
+                stmt.setObject(i, uuid)
+
+                stmt.executeUpdate()
+            }
+        }
+    }
+
     private fun itemStackListToByteArray(list: List<ItemStack?>): ByteArray {
         val map = list.mapIndexedNotNull { index, itemStack ->
             itemStack?.let { index to itemStack }
@@ -169,7 +186,7 @@ class PostgresStorage : SQLStorage() {
             MapSerializer(Int.serializer(), ItemStackSerializer),
             this
         )
-        return (0..<36).map { idx ->
+        return (0..<43).map { idx ->
             map[idx]
         }.toList()
     }
@@ -264,7 +281,26 @@ class PostgresStorage : SQLStorage() {
     }
 
     override fun cleanupHardExpiredGraves() {
-        // TODO: delete graves that are too old and make them drop their items
+        val sql = """
+            SELECT graveUuid
+            FROM graves
+            WHERE timerStartedAtGameTime <= ?
+        """.trimIndent()
+        ds.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setLong(
+                    1,
+                    SourGraves.plugin.server.worlds.first().gameTime - SourGraves.plugin.pluginConfig.deleteInMinutes * 60 * 20
+                )
+
+                stmt.executeQuery().use { rs ->
+                    while (rs.next()) {
+                        val uuid = rs.getObject(1, UUID::class.java)
+                        SourGraves.plugin.graveHandler.purgeGraveDropItems(uuid)
+                    }
+                }
+            }
+        }
     }
 
 
