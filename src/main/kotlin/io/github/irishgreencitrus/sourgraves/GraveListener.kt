@@ -8,6 +8,7 @@ import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.Particle
 import org.bukkit.entity.ArmorStand
@@ -17,10 +18,12 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
 import org.bukkit.event.world.ChunkLoadEvent
+import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import java.math.BigDecimal
 import java.time.Instant
@@ -33,7 +36,7 @@ class GraveListener : Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     fun onPlayerDeath(e: PlayerDeathEvent) {
         val handl = plugin.graveHandler
-        val stor = SourGraves.storage
+        val stor = storage
         val cfg = plugin.pluginConfig
         val inv = e.player.inventory
         if (e.player.world.name in cfg.disabledWorlds) return
@@ -97,11 +100,11 @@ class GraveListener : Listener {
         val cfg = plugin.pluginConfig
 
         val armourStand: ArmorStand = e.rightClicked as ArmorStand
-        val key = NamespacedKey(SourGraves.plugin, "sour_grave_id")
+        val key = NamespacedKey(plugin, "sour_grave_id")
         if (!armourStand.persistentDataContainer.has(key)) return
 
         val graveUUID = UUID.fromString(armourStand.persistentDataContainer.get(key, PersistentDataType.STRING))
-        val grave = SourGraves.storage[graveUUID] ?: return
+        val grave = storage[graveUUID] ?: return
 
         val playerIsOwner = e.player.uniqueId == grave.ownerUuid
         val canAccess =
@@ -118,19 +121,19 @@ class GraveListener : Listener {
             //  I *think* this is normally the case, but it's not always guaranteed.
             //  If people start reporting bugs with economy have a look here.
 
-            val balance = SourGraves.economy?.balance(SourGraves.plugin.name, e.player.uniqueId) ?: BigDecimal.ZERO
-            val graveSize = SourGraves.storage[graveUUID]!!.items.size
-            val multiplier = if (cfg.economy.graveRecoverPaymentType == PaymentType.FLAT) 1 else graveSize
+            val balance = SourGraves.economy?.balance(plugin.name, e.player.uniqueId) ?: BigDecimal.ZERO
+            val graveSize = storage[graveUUID]!!.items.size
             if (playerIsOwner) {
+                val multiplier = if (cfg.economy.graveRecoverPaymentType == PaymentType.FLAT) 1 else graveSize
                 val recoverCost = BigDecimal.valueOf(cfg.economy.graveRecoverCost * multiplier)
                 if (balance >= recoverCost) {
                     val response =
-                        SourGraves.economy?.withdraw(SourGraves.plugin.name, e.player.uniqueId, recoverCost)!!
+                        SourGraves.economy?.withdraw(plugin.name, e.player.uniqueId, recoverCost)!!
                     if (!response.transactionSuccess()) return
                     e.player.sendMessage(
                         Component.text(
                             "Successfully recovered the grave for " + SourGraves.economy?.format(
-                                SourGraves.plugin.name,
+                                plugin.name,
                                 recoverCost
                             )
                         ).color(NamedTextColor.GREEN)
@@ -142,14 +145,15 @@ class GraveListener : Listener {
                     return
                 }
             } else {
+                val multiplier = if (cfg.economy.graveRobPaymentType == PaymentType.FLAT) 1 else graveSize
                 val robCost = BigDecimal.valueOf(cfg.economy.graveRobCost * multiplier)
                 if (balance >= BigDecimal.valueOf(cfg.economy.graveRobCost)) {
-                    val response = SourGraves.economy?.withdraw(SourGraves.plugin.name, e.player.uniqueId, robCost)!!
+                    val response = SourGraves.economy?.withdraw(plugin.name, e.player.uniqueId, robCost)!!
                     if (!response.transactionSuccess()) return
                     e.player.sendMessage(
                         Component.text(
                             "Successfully robbed the grave for " + SourGraves.economy?.format(
-                                SourGraves.plugin.name,
+                                plugin.name,
                                 robCost
                             )
                         ).color(NamedTextColor.GREEN)
@@ -184,9 +188,9 @@ class GraveListener : Listener {
         val oldContents = player.inventory.contents.clone().filterNotNull()
 
         // TODO: maybe give a warning here if the grave is already gone?
-        val data = SourGraves.storage[graveUUID] ?: return
+        val data = storage[graveUUID] ?: return
 
-        SourGraves.storage.delete(graveUUID)
+        storage.delete(graveUUID)
         player.inventory.contents = data.items.toTypedArray()
 
 
@@ -214,7 +218,7 @@ class GraveListener : Listener {
         val iter = plugin.graveHandler.graveWithInvalidCache.iterator()
         while (iter.hasNext()) {
             val it = iter.next()
-            val grave = SourGraves.storage[it]!!
+            val grave = storage[it]!!
             val entity = e.world.getEntity(it)
             if (entity != null) {
                 grave.cachedLocation = entity.location
@@ -223,7 +227,7 @@ class GraveListener : Listener {
         }
 
         toRemove.filterValues { it == coord }.forEach {
-            SourGraves.plugin.graveHandler.purgeGraveDropItems(it.key, chunkLoadEvent = true)
+            plugin.graveHandler.purgeGraveDropItems(it.key, chunkLoadEvent = true)
         }
     }
 
@@ -232,8 +236,8 @@ class GraveListener : Listener {
         val cfg = plugin.pluginConfig
 
         if (!cfg.notifyCoordsOnRespawn) return
-        val grave = SourGraves.storage.newestGrave(e.player) ?: return
-        val locatedGrave = SourGraves.plugin.graveHandler.locateGrave(grave.first) ?: return
+        val grave = storage.newestGrave(e.player) ?: return
+        val locatedGrave = plugin.graveHandler.locateGrave(grave.first) ?: return
         val gravePos = locatedGrave.first
 
         e.player.sendMessage(
@@ -250,6 +254,25 @@ class GraveListener : Listener {
         if (event.inventory != holder.inventory) return
         storage.query(holder.graveUuid)?.items?.forEachIndexed { i, item ->
             holder.inventory.setItem(i, item)
+        }
+        (41..<45).forEach {
+            val item = ItemStack.of(Material.BARRIER)
+            val meta = item.itemMeta
+            meta.displayName(Component.text("Not Accessible").color(NamedTextColor.RED))
+            item.itemMeta = meta
+            holder.inventory.setItem(it, item)
+        }
+    }
+
+    @EventHandler
+    fun onInventoryClick(event: InventoryClickEvent) {
+        if (event.inventory.holder == null) return
+        if (event.inventory.holder !is GraveInventory) return
+        val holder = event.inventory.holder as GraveInventory
+        if (event.inventory != holder.inventory) return
+
+        if (event.currentItem?.type == Material.BARRIER) {
+            event.isCancelled = true
         }
     }
 

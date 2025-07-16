@@ -186,6 +186,8 @@ class PostgresStorage : SQLStorage() {
             MapSerializer(Int.serializer(), ItemStackSerializer),
             this
         )
+        // We store all 43 slots as that's what Paper gives us,
+        // TODO: However there are only 41 usable slots, so prevent the last 2 from being modified.
         return (0..<43).map { idx ->
             map[idx]
         }.toList()

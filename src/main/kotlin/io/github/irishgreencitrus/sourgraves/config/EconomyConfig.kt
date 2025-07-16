@@ -21,7 +21,7 @@ data class EconomyConfig(
     @TomlComment("The cost either per grave or per item stack in the grave")
     var graveRobPaymentType: PaymentType = PaymentType.FLAT,
     @TomlComment("Whether to enable the insurance feature. If a player does not have grave insurance, they will not drop a grave.")
-    var enableInsurance: Boolean = true,
+    var enableInsurance: Boolean = false,
     @TomlComment("The cost of grave insurance. Only active if insurance is enabled.")
     var insuranceCost: Double = 20.0
 )

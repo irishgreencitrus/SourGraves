@@ -1,10 +1,7 @@
 package io.github.irishgreencitrus.sourgraves
 
 import io.github.irishgreencitrus.sourgraves.config.GraveConfig
-import io.github.irishgreencitrus.sourgraves.storage.GraveStorage
-import io.github.irishgreencitrus.sourgraves.storage.LegacyFileStorage
-import io.github.irishgreencitrus.sourgraves.storage.PostgresStorage
-import io.github.irishgreencitrus.sourgraves.storage.SQLStorage
+import io.github.irishgreencitrus.sourgraves.storage.*
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.milkbowl.vault2.economy.Economy
 import org.bukkit.Bukkit
@@ -86,8 +83,8 @@ class SourGraves : JavaPlugin() {
         if (pluginConfig.sql.enable) {
             if ("postgres" in pluginConfig.sql.jdbcConnectionUri) {
                 storage = PostgresStorage()
-            } else {
-                TODO("Add MySQL here")
+            } else if ("sqlite" in pluginConfig.sql.jdbcConnectionUri) {
+                storage = SQLiteStorage()
             }
             successfulStorage = storage.init()
             if (!successfulStorage) {
@@ -125,7 +122,6 @@ class SourGraves : JavaPlugin() {
             }
         }
 
-        Class.forName("org.sqlite.JDBC");
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {
             it.registrar().register(GraveCommand.createCommand().build())
