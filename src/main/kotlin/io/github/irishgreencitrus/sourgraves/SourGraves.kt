@@ -151,7 +151,8 @@ class SourGraves : JavaPlugin() {
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(
             this, {
-                storage.cleanupHardExpiredGraves()
+                if (pluginConfig.deleteInMinutes > 0)
+                    storage.cleanupHardExpiredGraves()
                 storage.sync()
                 if (pluginConfig.logMessages.cleanupTask)
                     logger.info("Cleaned graves and written to disk")

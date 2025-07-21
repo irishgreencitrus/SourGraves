@@ -3,6 +3,7 @@ package io.github.irishgreencitrus.sourgraves.storage
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.irishgreencitrus.sourgraves.GraveData
+import io.github.irishgreencitrus.sourgraves.GraveHelper
 import io.github.irishgreencitrus.sourgraves.SourGraves
 import io.github.irishgreencitrus.sourgraves.serialize.ItemStackSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -285,7 +286,7 @@ class PostgresStorage : SQLStorage() {
 
     override fun cleanupHardExpiredGraves() {
         val sql = """
-            SELECT graveUuid
+            SELECT graveUuid, ownerUuid
             FROM graves
             WHERE timerStartedAtGameTime <= ?
         """.trimIndent()
@@ -298,8 +299,11 @@ class PostgresStorage : SQLStorage() {
 
                 stmt.executeQuery().use { rs ->
                     while (rs.next()) {
-                        val uuid = rs.getObject(1, UUID::class.java)
-                        SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid)
+                        val owner = rs.getObject(1, UUID::class.java)
+                        val uuid = rs.getObject(2, UUID::class.java)
+                        if (!GraveHelper.isExemptFromGraveExpiry(owner)) {
+                            SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid)
+                        }
                     }
                 }
             }

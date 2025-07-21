@@ -36,17 +36,26 @@ object GraveHelper {
     fun isGravePublic(graveData: GraveData): Boolean {
         val cfg = SourGraves.plugin.pluginConfig
         if (cfg.publicInMinutes == -1) return false
+        if (SourGraves.plugin.server.getPlayer(graveData.ownerUuid)
+                ?.hasPermission("sourgraves.player.permaprivate") == true
+        ) {
+            return false
+        }
         val expiryGameTime = graveData.timerStartedAtGameTime + cfg.publicInMinutes.toLong() * 60 * 20
         return expiryGameTime < (graveData.cachedLocation.world?.gameTime
             ?: SourGraves.plugin.server.worlds[0].gameTime)
     }
 
-    fun isGraveQueuedForDeletion(graveData: GraveData): Boolean {
+    fun isGraveExpired(graveData: GraveData): Boolean {
+        if (isExemptFromGraveExpiry(graveData.ownerUuid)) return false
         val cfg = SourGraves.plugin.pluginConfig
-        if (cfg.deleteInMinutes == -1) return false
         val deletionGameTime = graveData.timerStartedAtGameTime + cfg.deleteInMinutes.toLong() * 60 * 20
         return deletionGameTime < (graveData.cachedLocation.world?.gameTime
             ?: SourGraves.plugin.server.worlds[0].gameTime)
+    }
+
+    fun isExemptFromGraveExpiry(player: UUID): Boolean {
+        return SourGraves.plugin.server.getPlayer(player)?.hasPermission("sourgraves.player.permagraves") != true
     }
 
     fun getArmourStandEntity(server: Server, uuid: UUID): Entity? {

@@ -3,6 +3,7 @@ package io.github.irishgreencitrus.sourgraves.storage
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.irishgreencitrus.sourgraves.GraveData
+import io.github.irishgreencitrus.sourgraves.GraveHelper
 import io.github.irishgreencitrus.sourgraves.SourGraves
 import io.github.irishgreencitrus.sourgraves.serialize.ItemStackSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -295,7 +296,7 @@ class MySqlStorage : SQLStorage() {
 
     override fun cleanupHardExpiredGraves() {
         val sql = """
-            SELECT graveUuid
+            SELECT graveUuid, ownerUuid
             FROM graves
             WHERE timerStartedAtGameTime <= ?
         """.trimIndent()
@@ -308,8 +309,11 @@ class MySqlStorage : SQLStorage() {
 
                 stmt.executeQuery().use { rs ->
                     while (rs.next()) {
-                        val uuid = rs.getBytes(1).toUUID()
-                        SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid)
+                        val owner = rs.getBytes(1).toUUID()
+                        val uuid = rs.getBytes(2).toUUID()
+                        if (!GraveHelper.isExemptFromGraveExpiry(owner)) {
+                            SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid)
+                        }
                     }
                 }
             }

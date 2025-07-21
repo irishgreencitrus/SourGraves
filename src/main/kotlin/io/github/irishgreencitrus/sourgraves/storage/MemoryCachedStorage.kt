@@ -37,9 +37,8 @@ abstract class MemoryCachedStorage : GraveStorage() {
         val mutIter = graves.iterator()
         while (mutIter.hasNext()) {
             val (u, g) = mutIter.next()
-            if (GraveHelper.isGraveQueuedForDeletion(g)) {
+            if (GraveHelper.isGraveExpired(g))
                 SourGraves.plugin.graveHandler.deleteGraveFromWorld(u)
-            }
         }
     }
 
