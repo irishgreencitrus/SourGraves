@@ -65,8 +65,11 @@ class GraveHandler {
         val armourStand = plugin.server.getEntity(armourUuid)
 
         if (armourStand == null) {
-            if (plugin.pluginConfig.logMessages.armourStandNotFoundOnGravePurge)
+            if (plugin.pluginConfig.logMessages.armourStandNotFoundOnGravePurge) {
                 plugin.logger.warning("Armour stand not found with uuid $uuid, but chunk is loaded. Perhaps it has been killed?")
+                plugin.logger.warning("Deleting grave from storage but unable drop any items.")
+                purgeGrave(uuid)
+            }
             return
         }
 
