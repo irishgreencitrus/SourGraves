@@ -11,6 +11,7 @@ abstract class SQLStorage : GraveStorage() {
      */
     open fun convertFrom(oldStorage: MemoryCachedStorage) {
         for ((uuid, data) in oldStorage.queryAll()) {
+            if (contains(uuid)) continue
             write(uuid, data)
         }
     }

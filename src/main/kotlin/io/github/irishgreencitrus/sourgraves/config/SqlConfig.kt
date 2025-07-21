@@ -11,10 +11,10 @@ data class SqlConfig(
     )
     var enable: Boolean = false,
     @TomlComment(
-        "Supported SQL servers: MariaDB and PostgreSQL\n" +
+        "Supported SQL servers: MySQL and PostgreSQL\n" +
                 "Google 'jdbc connection URL' to find out what to put here"
     )
-    var jdbcConnectionUri: String = "jdbc:postgres:",
+    var jdbcConnectionUri: String = "jdbc:postgres:admin@localhost/sourgraves",
     var username: String = "admin",
     var password: String = "changeme",
     @TomlComment(

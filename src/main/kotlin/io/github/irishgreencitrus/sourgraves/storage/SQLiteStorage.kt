@@ -299,7 +299,7 @@ class SQLiteStorage : SQLStorage() {
                 stmt.executeQuery().use { rs ->
                     while (rs.next()) {
                         val uuid = rs.getString(1)
-                        SourGraves.plugin.graveHandler.purgeGraveDropItems(UUID.fromString(uuid))
+                        SourGraves.plugin.graveHandler.deleteGraveFromWorld(UUID.fromString(uuid))
                     }
                 }
             }

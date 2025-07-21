@@ -1,11 +1,14 @@
 package io.github.irishgreencitrus.sourgraves
 
 import com.mojang.brigadier.Command
+import com.mojang.brigadier.LiteralMessage
 import com.mojang.brigadier.arguments.BoolArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import io.github.irishgreencitrus.brigadierdsl.*
+import io.github.irishgreencitrus.sourgraves.command.UUIDArgumentType
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes
 import io.papermc.paper.command.brigadier.argument.RegistryArgumentExtractor
@@ -115,29 +118,91 @@ object GraveCommand {
                             }
                         }
                     }
-
-                    // TODO: implement the give commands here.
-                    literal("give_to_me") {
-                        literal("by_index") {
-                            argument("index", IntegerArgumentType.integer(0)) {}
-                        }
-                        literal("newest") {}
-                        literal("oldest") {}
-                        literal("nearest") {}
-                        literal("furthest") {}
-                    }
-                    literal("give_to_them") {
-                        literal("by_index") {
-                            argument("index", IntegerArgumentType.integer(0)) {}
-                        }
-                        literal("newest") {}
-                        literal("oldest") {}
-                        literal("nearest") {}
-                        literal("furthest") {}
-                    }
                 }
                 requires {
                     it.sender.hasPermission("sourgraves.utils.player")
+                }
+            }
+            literal("give") {
+                literal("by_grave_uuid") {
+                    argument("uuid", UUIDArgumentType.uuid()) {
+                        argument("give_to", ArgumentTypes.player()) {
+                            does { ctx ->
+                                val resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver::class.java)
+                                val player = resolver.resolve(ctx.source).first()
+                                val uuid = UUIDArgumentType.getUuid("uuid", ctx)
+                                val graveData = SourGraves.storage[uuid]
+                                    ?: throw SimpleCommandExceptionType(LiteralMessage("That UUID isn't a valid grave")).create()
+
+                                val leftovers =
+                                    player.inventory.addItem(*graveData.items.filterNotNull().toTypedArray())
+                                leftovers.values.forEach {
+                                    player.world.dropItemNaturally(player.location, it)
+                                }
+
+                                SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid, canDropItems = false)
+                                ctx.source.sender.sendMessage(Component.text("Given contents to ${player.name}. The grave has been deleted."))
+                            }
+                        }
+
+                    }
+                }
+                literal("oldest") {
+                    argument("grave_owner", ArgumentTypes.player()) {
+                        argument("give_to", ArgumentTypes.player()) {
+                            does { ctx ->
+                                val ownerResolver =
+                                    ctx.getArgument("grave_owner", PlayerSelectorArgumentResolver::class.java)
+                                val graveOwner = ownerResolver.resolve(ctx.source).first()
+
+                                val recvResolver =
+                                    ctx.getArgument("give_to", PlayerSelectorArgumentResolver::class.java)
+                                val recvPlayer = recvResolver.resolve(ctx.source).first()
+
+                                val (uuid, oldestGrave) = SourGraves.storage.oldestGrave(graveOwner)
+                                    ?: throw SimpleCommandExceptionType(LiteralMessage("Couldn't find oldest grave for player ${graveOwner.name}")).create()
+
+                                val leftovers =
+                                    recvPlayer.inventory.addItem(*oldestGrave.items.filterNotNull().toTypedArray())
+                                leftovers.values.forEach {
+                                    recvPlayer.world.dropItemNaturally(recvPlayer.location, it)
+                                }
+
+                                SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid, canDropItems = false)
+                                ctx.source.sender.sendMessage(Component.text("Given ${graveOwner.name}'s oldest grave to ${recvPlayer.name}. The grave has been deleted."))
+                            }
+                        }
+                    }
+                }
+                literal("newest") {
+                    argument("grave_owner", ArgumentTypes.player()) {
+                        argument("give_to", ArgumentTypes.player()) {
+                            does { ctx ->
+                                val ownerResolver =
+                                    ctx.getArgument("grave_owner", PlayerSelectorArgumentResolver::class.java)
+                                val graveOwner = ownerResolver.resolve(ctx.source).first()
+
+                                val recvResolver =
+                                    ctx.getArgument("give_to", PlayerSelectorArgumentResolver::class.java)
+                                val recvPlayer = recvResolver.resolve(ctx.source).first()
+
+                                val (uuid, newestGrave) = SourGraves.storage.newestGrave(graveOwner)
+                                    ?: throw SimpleCommandExceptionType(LiteralMessage("Couldn't find newest grave for player ${graveOwner.name}")).create()
+
+                                val leftovers =
+                                    recvPlayer.inventory.addItem(*newestGrave.items.filterNotNull().toTypedArray())
+                                leftovers.values.forEach {
+                                    recvPlayer.world.dropItemNaturally(recvPlayer.location, it)
+                                }
+
+                                SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid, canDropItems = false)
+                                ctx.source.sender.sendMessage(Component.text("Given ${graveOwner.name}'s newest grave to ${recvPlayer.name}. The grave has been deleted."))
+                            }
+                        }
+                    }
+                }
+                requires {
+                    it.sender.hasPermission("sourgraves.admin.give")
                 }
             }
             literal("settings") {

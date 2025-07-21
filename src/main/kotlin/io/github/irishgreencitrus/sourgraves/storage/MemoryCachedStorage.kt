@@ -38,7 +38,7 @@ abstract class MemoryCachedStorage : GraveStorage() {
         while (mutIter.hasNext()) {
             val (u, g) = mutIter.next()
             if (GraveHelper.isGraveQueuedForDeletion(g)) {
-                SourGraves.plugin.graveHandler.purgeGraveDropItems(u)
+                SourGraves.plugin.graveHandler.deleteGraveFromWorld(u)
             }
         }
     }

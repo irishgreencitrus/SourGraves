@@ -26,7 +26,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.8.0")
     implementation("com.zaxxer:HikariCP:6.3.0")
     compileOnly("io.papermc.paper:paper-api:$paperApiVersion")
-    implementation("org.mariadb.jdbc:mariadb-java-client:3.3.1")
+    implementation("com.mysql:mysql-connector-j:9.3.0") {
+        exclude(group = "com.google.protobuf", module = "protobuf-java")
+    }
     implementation("org.postgresql:postgresql:42.7.7")
     compileOnly("net.milkbowl.vault:VaultUnlockedAPI:2.11")
 }

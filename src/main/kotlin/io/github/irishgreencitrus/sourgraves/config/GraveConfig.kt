@@ -51,21 +51,26 @@ data class GraveConfig(
     @TomlComment("Swaps the behaviour of normal and shift clicking when `allowChestLikeGraveAccess` is `true`")
     var chestAccessSwapNormalAndShift: Boolean = false,
     @TomlComment(
+        "Whether to use legacy json-based file storage rather than the new SQLite database.\n" +
+                "I can't think of any reason to enable this, but the functionality remains, so the option also remains.\n" +
+                "Overrides any settings in [sql]."
+    )
+    var forceLegacyFileStorage: Boolean = false,
+    @TomlComment(
         "A list of the worlds that graves will *not* spawn in.\n" +
                 "This will lead to the default behaviour i.e. dropping items.\n" +
                 "Example values: ['world_nether']"
     )
     var disabledWorlds: List<String> = listOf(),
     @TomlComment(
-        "Changing the sql options require you to restart the server.\n" +
-                "If SQL is used, graves will be converted from the `graves.json` file and the file will not be updated again.\n" +
-                "The `graves.json` file will **not** be deleted."
+        "Changing the [sql] options require you to restart the server.\n" +
+                "NOTE: this only controls the supported SQL servers. SQLite storage is enabled by default and does not require any configuration.\n"
     )
     var sql: SqlConfig = SqlConfig(),
     var economy: EconomyConfig = EconomyConfig(),
     @TomlComment(
         "Change anything in here if you find the log messages too invasive.\n" +
-                "Some log messages cannot be disabled as they convey important information."
+                "Most severe and warning messages cannot be disabled, by design."
     )
     var logMessages: LogMessagesConfig = LogMessagesConfig()
 ) {
@@ -96,7 +101,7 @@ data class GraveConfig(
             #  - Comments made in this file will be deleted.
             #  - The cleanup task is what actually deletes graves, as well as saves graves to disk.
             #     It should not be ran too infrequently, as your graves will not be saved if the server crashes.
-            #     The default should probably be fine, but it can be raised or lowered as necessary.   
+            #     The default should probably be fine, but it can be raised or lowered as necessary.
             #
             
         """.trimIndent() + toString()

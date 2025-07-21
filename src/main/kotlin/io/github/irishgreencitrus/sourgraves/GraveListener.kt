@@ -43,6 +43,7 @@ class GraveListener : Listener {
         if (e.isCancelled) return
         if (cfg.disableForPvpKills) {
             if (e.player.killer != null) return
+            @Suppress("UnstableApiUsage")
             if (e.damageSource.causingEntity is Player) return
         }
         if (inv.isEmpty) return
@@ -55,7 +56,7 @@ class GraveListener : Listener {
         if (cfg.maxGravesPerPlayer != -1) {
             if (currentGraves.size >= cfg.maxGravesPerPlayer) {
                 val oldestGrave = stor.oldestGrave(e.player)!!
-                handl.purgeGraveDropItems(oldestGrave.first, tooManyGraves = true)
+                handl.deleteGraveFromWorld(oldestGrave.first, tooManyGraves = true)
             }
         }
 
@@ -169,7 +170,7 @@ class GraveListener : Listener {
 
         if (cfg.allowChestLikeGraveAccess) {
             if (shiftClick) restoreGrave(e.player, graveUUID, armourStand)
-            else openGraveInventory(e.player, graveUUID, armourStand)
+            else openGraveInventory(e.player, graveUUID)
         } else {
             restoreGrave(e.player, graveUUID, armourStand)
         }
@@ -187,8 +188,11 @@ class GraveListener : Listener {
 
         val oldContents = player.inventory.contents.clone().filterNotNull()
 
-        // TODO: maybe give a warning here if the grave is already gone?
-        val data = storage[graveUUID] ?: return
+        val data = storage[graveUUID]
+        if (data == null) {
+            plugin.logger.warning("Trying to restore grave with UUID ${graveUUID}, but it seems to not exist in the database?")
+            return
+        }
 
         storage.delete(graveUUID)
         player.inventory.contents = data.items.toTypedArray()
@@ -200,7 +204,7 @@ class GraveListener : Listener {
         }
     }
 
-    private fun openGraveInventory(player: Player, graveUUID: UUID, armourStand: ArmorStand) {
+    private fun openGraveInventory(player: Player, graveUUID: UUID) {
         if (graveUUID !in storage) return
         val name = player.displayName().append(Component.text("'s Grave"))
         val inv = GraveInventory(graveUUID, name)
@@ -227,7 +231,7 @@ class GraveListener : Listener {
         }
 
         toRemove.filterValues { it == coord }.forEach {
-            plugin.graveHandler.purgeGraveDropItems(it.key, chunkLoadEvent = true)
+            plugin.graveHandler.deleteGraveFromWorld(it.key, chunkLoadEvent = true)
         }
     }
 
@@ -284,7 +288,7 @@ class GraveListener : Listener {
 
         // There's not much point updating the stored items if we're going to purge the grave anyway
         if (holder.inventory.contents.all { it == null }) {
-            plugin.graveHandler.purgeGraveDropItems(holder.graveUuid, canDropItems = false)
+            plugin.graveHandler.deleteGraveFromWorld(holder.graveUuid, canDropItems = false)
             return
         }
         storage.updateItems(holder.graveUuid, holder.inventory.contents.toList())

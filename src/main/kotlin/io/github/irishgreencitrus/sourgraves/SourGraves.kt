@@ -80,47 +80,69 @@ class SourGraves : JavaPlugin() {
 
 
         var successfulStorage = false
-        if (pluginConfig.sql.enable) {
-            if ("postgres" in pluginConfig.sql.jdbcConnectionUri) {
-                storage = PostgresStorage()
-            } else if ("sqlite" in pluginConfig.sql.jdbcConnectionUri) {
-                storage = SQLiteStorage()
-            }
-            successfulStorage = storage.init()
-            if (!successfulStorage) {
-                logger.severe(
-                    "The SQL database failed to load correctly.\n" +
-                            "This is not a bug with the plugin, rather a problem the config / SQL server.\n" +
-                            "To prevent data loss, the plugin will be disabled."
-                )
-                server.pluginManager.disablePlugin(this)
-                return
-            }
 
-            if (!pluginConfig.sql.alreadyConvertedFromJson && (storage is SQLStorage)) {
-                val oldStorage = LegacyFileStorage(dataFolder)
-                if (oldStorage.init()) {
-                    (storage as SQLStorage).convertFrom(oldStorage)
-                    pluginConfig.sql.alreadyConvertedFromJson = true
-                } else {
-                    logger.warning("Failed to convert graves from `graves.json` to the SQL server")
-                }
-            }
-        }
-
-        if (!::storage.isInitialized || !successfulStorage) {
+        if (pluginConfig.forceLegacyFileStorage) {
             storage = LegacyFileStorage(dataFolder)
             successfulStorage = storage.init()
             if (!successfulStorage) {
                 logger.severe(
-                    "File based storage failed to load properly.\n" +
+                    "Legacy file based storage failed to load properly.\n" +
                             "This is not a bug with the plugin, rather a problem the config / filesystem.\n" +
                             "To prevent data loss, the plugin will now be disabled."
                 )
                 server.pluginManager.disablePlugin(this)
                 return
             }
+            logger.warning("You have enabled legacy json storage. The SQL settings will be ignored")
         }
+
+        // SQL controls the SQL servers.
+        if (pluginConfig.sql.enable && !successfulStorage) {
+            if ("postgres" in pluginConfig.sql.jdbcConnectionUri) {
+                storage = PostgresStorage()
+            } else if ("mysql" in pluginConfig.sql.jdbcConnectionUri) {
+                storage = MySqlStorage()
+            }
+            successfulStorage = storage.init()
+            if (!successfulStorage) {
+                logger.severe(
+                    "The SQL database server failed to load correctly.\n" +
+                            "This is not a bug with the plugin, rather a problem the config / SQL server.\n" +
+                            "To prevent data loss, the plugin will be disabled."
+                )
+                server.pluginManager.disablePlugin(this)
+                return
+            }
+        }
+
+        if (!::storage.isInitialized || !successfulStorage) {
+            storage = SQLiteStorage()
+            successfulStorage = storage.init()
+            if (!successfulStorage) {
+                logger.severe(
+                    "The SQLite database server failed to load correctly.\n" +
+                            "This is not a bug with the plugin, rather a problem the config / filesystem.\n" +
+                            "To prevent data loss, the plugin will be disabled."
+                )
+                server.pluginManager.disablePlugin(this)
+                return
+            }
+        }
+
+        if (!pluginConfig.sql.alreadyConvertedFromJson && (storage is SQLStorage)) {
+            val dataFile = File(dataFolder, "graves.json")
+            if (dataFile.exists()) {
+                logger.info("Converting `graves.json` to your enabled SQL storage. This will only happen once.")
+                val oldStorage = LegacyFileStorage(dataFolder)
+                if (oldStorage.init()) {
+                    (storage as SQLStorage).convertFrom(oldStorage)
+                    pluginConfig.sql.alreadyConvertedFromJson = true
+                } else {
+                    logger.warning("Failed to convert graves from `graves.json` to the SQL storage.")
+                }
+            }
+        }
+
 
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) {

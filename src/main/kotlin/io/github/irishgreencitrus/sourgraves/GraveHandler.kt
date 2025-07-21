@@ -31,7 +31,7 @@ class GraveHandler {
     }
 
     private var messagePrinted = false
-    fun purgeGraveDropItems(
+    fun deleteGraveFromWorld(
         uuid: UUID,
         tooManyGraves: Boolean = false,
         chunkLoadEvent: Boolean = false,

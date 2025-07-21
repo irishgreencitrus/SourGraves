@@ -186,8 +186,9 @@ class PostgresStorage : SQLStorage() {
             MapSerializer(Int.serializer(), ItemStackSerializer),
             this
         )
-        // We store all 43 slots as that's what Paper gives us,
-        // TODO: However there are only 41 usable slots, so prevent the last 2 from being modified.
+        // We 'store' all 43 slots as that's what Paper gives us, but the last 2 are unused for some reason.
+        // It turns out not to actually matter because we only store
+        // non-null values in `itemStackListToByteArray`, so no space is wasted anyway.
         return (0..<43).map { idx ->
             map[idx]
         }.toList()
@@ -298,7 +299,7 @@ class PostgresStorage : SQLStorage() {
                 stmt.executeQuery().use { rs ->
                     while (rs.next()) {
                         val uuid = rs.getObject(1, UUID::class.java)
-                        SourGraves.plugin.graveHandler.purgeGraveDropItems(uuid)
+                        SourGraves.plugin.graveHandler.deleteGraveFromWorld(uuid)
                     }
                 }
             }

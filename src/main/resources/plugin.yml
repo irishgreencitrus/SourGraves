@@ -15,6 +15,9 @@ permissions:
   sourgraves.admin.settings:
     description: Allows you to use `/sourgraves settings`
     default: op
+  sourgraves.admin.give:
+    description: Allows you use `/sourgraves give`
+    default: op
   sourgraves.player.graveaccess:
     description: A player with this permission can open any grave, regardless of whether it is public.
     default: false
