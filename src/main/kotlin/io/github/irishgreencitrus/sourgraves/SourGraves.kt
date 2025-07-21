@@ -102,6 +102,14 @@ class SourGraves : JavaPlugin() {
                 storage = PostgresStorage()
             } else if ("mysql" in pluginConfig.sql.jdbcConnectionUri) {
                 storage = MySqlStorage()
+            } else {
+                logger.severe(
+                    "You have enabled SQL but you have an unsupported connection uri.\n" +
+                            "Supported servers are PostgreSQL and MySQL.\n" +
+                            "To prevent data loss, the plugin will be disabled."
+                )
+                server.pluginManager.disablePlugin(this)
+                return
             }
             successfulStorage = storage.init()
             if (!successfulStorage) {
@@ -129,14 +137,15 @@ class SourGraves : JavaPlugin() {
             }
         }
 
-        if (!pluginConfig.sql.alreadyConvertedFromJson && (storage is SQLStorage)) {
+        if ((!pluginConfig.sql.alreadyConvertedFromJson) && (storage is SQLStorage)) {
             val dataFile = File(dataFolder, "graves.json")
             if (dataFile.exists()) {
-                logger.info("Converting `graves.json` to your enabled SQL storage. This will only happen once.")
+                logger.warning("Converting `graves.json` to your enabled SQL storage. This will only happen once.")
                 val oldStorage = LegacyFileStorage(dataFolder)
                 if (oldStorage.init()) {
                     (storage as SQLStorage).convertFrom(oldStorage)
                     pluginConfig.sql.alreadyConvertedFromJson = true
+                    writeConfig(true)
                 } else {
                     logger.warning("Failed to convert graves from `graves.json` to the SQL storage.")
                 }

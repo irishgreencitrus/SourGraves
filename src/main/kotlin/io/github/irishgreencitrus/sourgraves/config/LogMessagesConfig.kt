@@ -22,6 +22,6 @@ data class LogMessagesConfig(
                 "This could be a sign that another plugin is deleting armour stands."
     )
     var armourStandNotFoundOnGravePurge: Boolean = true,
-    @TomlComment("Gives a warning on startup if you are using file-based storage and have more than 100 graves")
+    @TomlComment("Gives a warning on startup if you are still using legacy JSON storage and have more than 100 graves.")
     var moreThan100GravesWarning: Boolean = true,
 )

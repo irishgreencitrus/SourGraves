@@ -64,7 +64,8 @@ data class GraveConfig(
     var disabledWorlds: List<String> = listOf(),
     @TomlComment(
         "Changing the [sql] options require you to restart the server.\n" +
-                "NOTE: this only controls the supported SQL servers. SQLite storage is enabled by default and does not require any configuration.\n"
+                "NOTE: this only controls the supported SQL servers.\n" +
+                "SQLite storage is enabled by default and does not require any configuration."
     )
     var sql: SqlConfig = SqlConfig(),
     var economy: EconomyConfig = EconomyConfig(),
@@ -91,19 +92,29 @@ data class GraveConfig(
 
     fun toFileString(): String {
         return """
-            # irishgreencitrus' Sour Graves
+            #   irishgreencitrus' Sour Graves v2 config
+            #
+            #
+            ##############################################
+            # COMMENTS MADE IN THIS FILE WILL BE DELETED #
+            ##############################################
+            #
+            #
+            # Notable updates since v1:
+            # - Graves are now stored in `graves.db` instead of `graves.json`.
+            # - If you have an existing `graves.json`, they should be converted to the new format.
+            # - Postgres and MySQL are also supported as external databases.
+            #
             # Everything in the plugin is completely configurable.
             # If you mess up the file, you can delete it to reset it to the defaults.
             #
             # Some key notes:
             #  - A player without any items in their inventory will not drop a grave.
             #  - A player with keepInventory enabled will not drop a grave.
-            #  - Comments made in this file will be deleted.
             #  - The cleanup task is what actually deletes graves, as well as saves graves to disk.
             #     It should not be ran too infrequently, as your graves will not be saved if the server crashes.
             #     The default should probably be fine, but it can be raised or lowered as necessary.
             #
-            
         """.trimIndent() + toString()
     }
 }

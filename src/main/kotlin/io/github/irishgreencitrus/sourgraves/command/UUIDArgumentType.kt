@@ -3,13 +3,16 @@ package io.github.irishgreencitrus.sourgraves.command
 import com.mojang.brigadier.LiteralMessage
 import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.ArgumentType
+import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType
+import io.papermc.paper.command.brigadier.argument.CustomArgumentType
 import java.util.*
 
 
-class UUIDArgumentType : ArgumentType<UUID> {
+@Suppress("UnstableApiUsage")
+class UUIDArgumentType : CustomArgumentType<UUID, String> {
     private val invalidUuid = DynamicCommandExceptionType { o: Any ->
         LiteralMessage(
             "Invalid uuid: $o"
@@ -29,7 +32,7 @@ class UUIDArgumentType : ArgumentType<UUID> {
 
     @Throws(CommandSyntaxException::class)
     override fun parse(reader: StringReader): UUID {
-        val argBeginning = reader.cursor;
+        val argBeginning = reader.cursor
         if (!reader.canRead()) {
             reader.skip()
         }
@@ -53,5 +56,9 @@ class UUIDArgumentType : ArgumentType<UUID> {
             "069a79f4-44e9-4726-a5be-fca90e38aaf5",
             "61699b2e-d327-4a01-9f1e-0ea8c3f06bc6"
         )
+    }
+
+    override fun getNativeType(): ArgumentType<String> {
+        return StringArgumentType.word()
     }
 }
