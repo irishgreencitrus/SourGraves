@@ -4,6 +4,9 @@ import io.github.irishgreencitrus.sourgraves.config.GraveConfig
 import io.github.irishgreencitrus.sourgraves.storage.*
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.milkbowl.vault2.economy.Economy
+import org.bstats.bukkit.Metrics
+import org.bstats.charts.SimplePie
+import org.bstats.charts.SingleLineChart
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
@@ -27,11 +30,14 @@ class SourGraves : JavaPlugin() {
 
     lateinit var storage: GraveStorage
 
+    private lateinit var metrics: Metrics
+
     var economy: Economy? = null
     var graveHandler = GraveHandler()
     var pluginConfig = GraveConfig()
 
     private val configFileName = "config.toml"
+    private val bstatsPluginId = 26681
 
     fun writeConfig(always: Boolean) {
         val configFile = File(dataFolder, configFileName)
@@ -72,6 +78,9 @@ class SourGraves : JavaPlugin() {
         Bukkit.getPluginManager().registerEvents(GraveListener(), this)
         writeConfig(always = false)
         loadConfig()
+
+        metrics = Metrics(this, bstatsPluginId)
+
         if (!setupEconomy() && pluginConfig.economy.enable) {
             logger.warning("Economy has been enabled, but Vault is not installed correctly.")
             logger.warning("Disabling all economy features.")
@@ -173,6 +182,22 @@ class SourGraves : JavaPlugin() {
             logger.info("Thanks for using my plugin, report any bugs you find at https://github.com/irishgreencitrus/SourGraves/issues")
             logger.info("Feel free to also join the Discord for help at https://discord.gg/B7Sd3eaTrs")
         }
+
+
+        metrics.addCustomChart(SimplePie("storageType") {
+            return@SimplePie when (storage) {
+                is SQLiteStorage -> "SQLite"
+                is MySqlStorage -> "MySQL"
+                is PostgresStorage -> "Postgres"
+                is LegacyFileStorage -> "Legacy"
+                else -> "Other"
+            }
+        })
+
+        metrics.addCustomChart(SingleLineChart("graveCount") {
+            storage.count()
+        })
+
         logger.info("irishgreencitrus' SourGraves are ready.")
     }
 

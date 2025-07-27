@@ -6,7 +6,7 @@ plugins {
 }
 val pluginName = "SourGraves"
 val minecraftVersion = properties.getOrDefault("minecraftVersion", "1.21")
-val pluginVersion = properties.getOrDefault("pluginVersion", "2.0.0")
+val pluginVersion = properties.getOrDefault("pluginVersion", "2.1.0")
 group = "io.github.irishgreencitrus"
 version = "$minecraftVersion-$pluginVersion"
 val paperApiVersion = "$minecraftVersion-R0.1-SNAPSHOT"
@@ -24,6 +24,7 @@ dependencies {
     implementation("net.peanuuutz.tomlkt:tomlkt:0.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.8.0")
+    implementation("org.bstats:bstats-bukkit:3.0.2")
     implementation("com.zaxxer:HikariCP:6.3.0")
     compileOnly("io.papermc.paper:paper-api:$paperApiVersion")
     implementation("com.mysql:mysql-connector-j:9.3.0") {
@@ -49,6 +50,7 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
+    relocate("org.bstats", "io.github.irishgreencitrus.stats")
     archiveFileName = "$pluginName-$version.jar"
 }
 
