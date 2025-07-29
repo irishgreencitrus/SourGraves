@@ -61,16 +61,21 @@ class SourGraves : JavaPlugin() {
             return false
         }
 
-        val rsp = server.servicesManager.getRegistration(
-            Economy::class.java
-        )
+        try {
+            val rsp = server.servicesManager.getRegistration(
+                Economy::class.java
+            )
 
-        if (rsp == null) {
+            if (rsp == null) {
+                return false
+            }
+
+            economy = rsp.provider
+            return true
+        } catch (e: NoClassDefFoundError) {
+            logger.warning("Economy is enabled, but you are probably using Vault instead of VaultUnlocked.")
             return false
         }
-
-        economy = rsp.provider
-        return true
     }
 
     @Suppress("UnstableApiUsage")
@@ -81,8 +86,8 @@ class SourGraves : JavaPlugin() {
 
         metrics = Metrics(this, bstatsPluginId)
 
-        if (!setupEconomy() && pluginConfig.economy.enable) {
-            logger.warning("Economy has been enabled, but Vault is not installed correctly.")
+        if (pluginConfig.economy.enable && !setupEconomy()) {
+            logger.warning("Economy has been enabled, but VaultUnlocked is not installed correctly.")
             logger.warning("Disabling all economy features.")
             pluginConfig.economy.enable = false
         }
