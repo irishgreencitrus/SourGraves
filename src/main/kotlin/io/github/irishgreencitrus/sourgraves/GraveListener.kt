@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.Particle
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
@@ -31,9 +32,8 @@ import java.util.*
 
 class GraveListener : Listener {
 
-    private val graveSnapshot: HashMap<UUID, Pair<UUID, GraveData>> = hashMapOf()
-
-    @EventHandler(priority = EventPriority.LOWEST)
+    // Allow other plugins to modify the inventory before we store it in a grave.
+    @EventHandler(priority = EventPriority.HIGH)
     fun onPlayerDeath(e: PlayerDeathEvent) {
         val handl = plugin.graveHandler
         val stor = storage
@@ -62,35 +62,29 @@ class GraveListener : Listener {
 
         val player = e.player
 
-        graveSnapshot[player.uniqueId] = Pair(
-            graveId, GraveData(
-                items = player.inventory.contents.toList(),
+        // NOTE: We read the inventory rather than drops, which could cause an issue with other plugins.
+        //       File an issue if this is the case!
+        val graveData = GraveData(
+            items = player.inventory.contents.toList().filterNot {
+                if (it != null) {
+                    shouldDeleteItem(it)
+                } else {
+                    false
+                }
+            },
             createdAt = Instant.now(),
             timerStartedAtGameTime = e.player.world.gameTime,
             ownerUuid = e.player.uniqueId,
             linkedArmourStandUuid = armourStand.uniqueId,
             cachedLocation = e.player.location
-            )
         )
-    }
 
-    // Why do we do it like this?
-    // We want to prevent Bukkit or other plugins from modifying our drops, but they could also affect
-    // whether we need to actually create a grave, i.e. with keepInventory on.
-    // Otherwise, we could accidentally duplicate items.
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    fun afterPlayerDeath(e: PlayerDeathEvent) {
-        if (e.keepInventory || e.isCancelled) {
-            graveSnapshot.remove(e.player.uniqueId)
-            return
-        }
-
-        // Once we've made a grave, only then commit it to storage permanently
-        val (graveId, graveData) = graveSnapshot.remove(e.player.uniqueId) ?: return
         plugin.storage[graveId] = graveData
         e.drops.clear()
+    }
 
-        // graveSnapshot should be empty by the time we reach here.
+    private fun shouldDeleteItem(item: ItemStack): Boolean {
+        return item.containsEnchantment(Enchantment.VANISHING_CURSE)
     }
 
     @EventHandler
