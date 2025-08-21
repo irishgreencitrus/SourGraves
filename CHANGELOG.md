@@ -1,3 +1,26 @@
+# Release 2.3.0
+
+Bug fixes related to grave restoration, especially chest access:
+
+Fix empty graves not being deleted Fix graves sometimes dropping barrier blocks Fix graves replacing filled slots with
+empty on restore
+
+# Release 2.2.0
+
+Move at what point during death grave storage happens. It used to happen at `EventPriority.LOWEST` and this has been
+moved to `EventPriority.HIGH`.
+This allows other plugins to modify the inventory before a Grave is created.
+
+# Release 2.1.1
+
+Fix bug where the plugin would crash if Vault was installed in place of VaultUnlocked.
+
+# Release 2.1.0
+
+Add bStats metrics.
+
+https://bstats.org/plugin/bukkit/SourGraves/26681
+
 # Release 2.0.0
 
 ## SQL support
