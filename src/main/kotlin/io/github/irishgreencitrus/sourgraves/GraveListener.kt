@@ -180,7 +180,8 @@ class GraveListener : Listener {
                 Key.key(cfg.recoverSound), Sound.Source.PLAYER, 1f, 1f))
         armourStand.remove()
 
-        val oldContents = player.inventory.contents.clone().filterNotNull()
+        // Clone the inventory, so we don't overwrite it
+        val leftoverContents = player.inventory.contents.clone()
 
         val data = storage[graveUUID]
         if (data == null) {
@@ -189,11 +190,18 @@ class GraveListener : Listener {
         }
 
         storage.delete(graveUUID)
-        player.inventory.contents = data.items.toTypedArray()
 
+        for ((i, item) in data.items.withIndex()) {
+            // If we don't have an item in the grave at that given slot, leave the inventory be.
+            if (item == null) {
+                leftoverContents[i] = null
+            } else {
+                player.inventory.contents[i] = item
+            }
+        }
 
-        val leftOvers = player.inventory.addItem(*oldContents.toTypedArray())
-        leftOvers.values.forEach {
+        val toBeDropped = player.inventory.addItem(*leftoverContents.filterNotNull().toTypedArray())
+        toBeDropped.values.forEach {
             player.world.dropItemNaturally(player.location, it)
         }
     }
@@ -280,11 +288,14 @@ class GraveListener : Listener {
         if (event.inventory.holder !is GraveInventory) return
         val holder = event.inventory.holder as GraveInventory
 
+        // Slots above 41 are inaccessible, and do not map to a real inventory slot.
+        val relevantContents = holder.inventory.contents.slice(0..<41)
+
         // There's not much point updating the stored items if we're going to purge the grave anyway
-        if (holder.inventory.contents.all { it == null }) {
+        if (relevantContents.all { it == null }) {
             plugin.graveHandler.deleteGraveFromWorld(holder.graveUuid, canDropItems = false)
             return
         }
-        storage.updateItems(holder.graveUuid, holder.inventory.contents.toList())
+        storage.updateItems(holder.graveUuid, relevantContents.toList())
     }
 }
