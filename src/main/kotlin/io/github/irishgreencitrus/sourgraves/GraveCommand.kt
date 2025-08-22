@@ -145,7 +145,7 @@ object GraveCommand {
                     argument("uuid", UUIDArgumentType.uuid()) {
                         argument("give_to", ArgumentTypes.player()) {
                             does { ctx ->
-                                val resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver::class.java)
+                                val resolver = ctx.getArgument("give_to", PlayerSelectorArgumentResolver::class.java)
                                 val player = resolver.resolve(ctx.source).first()
                                 val uuid = UUIDArgumentType.getUuid("uuid", ctx)
                                 val graveData = SourGraves.storage[uuid]
