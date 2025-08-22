@@ -196,7 +196,7 @@ class GraveListener : Listener {
             if (item == null) {
                 leftoverContents[i] = null
             } else {
-                player.inventory.contents[i] = item
+                player.inventory.setItem(i, item)
             }
         }
 
