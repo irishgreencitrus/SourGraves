@@ -121,6 +121,25 @@ object GraveCommand {
                     it.sender.hasPermission("sourgraves.utils.player")
                 }
             }
+
+            literal("undelete") {
+                argument("uuid", UUIDArgumentType.uuid()) {
+                    does { ctx ->
+                        val uuid = UUIDArgumentType.getUuid("uuid", ctx)
+                        if (!SourGraves.storage.supportsSoftDelete()) {
+                            throw SimpleCommandExceptionType(LiteralMessage("Soft Deletion is not supported by your storage")).create()
+                        }
+                        val worked = SourGraves.storage.undelete(uuid)
+                        if (!worked) {
+                            if (!SourGraves.plugin.pluginConfig.sql.softDeletion)
+                                throw SimpleCommandExceptionType(LiteralMessage("Soft deletion is disabled, the grave cannot be recovered.")).create()
+                            throw SimpleCommandExceptionType(LiteralMessage("The grave UUID was not found")).create()
+                        }
+
+                        ctx.source.sender.sendMessage(Component.text("Successfully undeleted grave with uuid $uuid"))
+                    }
+                }
+            }
             literal("give") {
                 literal("by_grave_uuid") {
                     argument("uuid", UUIDArgumentType.uuid()) {
