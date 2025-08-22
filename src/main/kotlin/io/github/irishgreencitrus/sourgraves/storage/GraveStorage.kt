@@ -32,12 +32,17 @@ abstract class GraveStorage {
 
     abstract fun count(): Int
 
+    abstract fun supportsSoftDelete(): Boolean
+
     // There is no way to query the entire database at once anymore.
     // This is by design.
     abstract fun query(uuid: UUID): GraveData?
     abstract fun updateItems(uuid: UUID, items: List<ItemStack?>)
     abstract fun write(uuid: UUID, data: GraveData)
     abstract fun delete(uuid: UUID)
+
+    // Only works if softDelete is ON.
+    abstract fun undelete(uuid: UUID): Boolean
 
     /**
      * Get a list of all the graves that belong to a given player.

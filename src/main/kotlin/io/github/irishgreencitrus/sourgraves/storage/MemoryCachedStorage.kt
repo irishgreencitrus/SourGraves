@@ -33,6 +33,10 @@ abstract class MemoryCachedStorage : GraveStorage() {
         graves.remove(uuid)
     }
 
+    override fun supportsSoftDelete(): Boolean = false
+
+    override fun undelete(uuid: UUID): Boolean = false
+
     override fun cleanupHardExpiredGraves() {
         val mutIter = graves.iterator()
         while (mutIter.hasNext()) {

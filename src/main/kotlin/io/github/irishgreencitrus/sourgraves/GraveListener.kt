@@ -208,7 +208,9 @@ class GraveListener : Listener {
 
     private fun openGraveInventory(player: Player, graveUUID: UUID) {
         if (graveUUID !in storage) return
-        val name = player.displayName().append(Component.text("'s Grave"))
+        val ownerUuid = storage[graveUUID]?.ownerUuid!!;
+        val owner = player.server.getOfflinePlayer(ownerUuid)
+        val name = Component.text(owner.name + "'s Grave")
         val inv = GraveInventory(graveUUID, name)
         player.openInventory(inv.inventory)
     }

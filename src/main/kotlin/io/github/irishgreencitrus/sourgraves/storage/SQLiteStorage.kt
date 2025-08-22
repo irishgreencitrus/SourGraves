@@ -217,6 +217,18 @@ class SQLiteStorage : SQLStorage() {
         }
     }
 
+    override fun undelete(uuid: UUID): Boolean {
+        val sql = "UPDATE graves SET deletedAt = NULL WHERE graveUuid = ?"
+        var rowCount: Int
+        ds.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setString(1, uuid.toString())
+                rowCount = stmt.executeUpdate()
+            }
+        }
+        return rowCount != 0
+    }
+
     override fun searchPlayerGraves(playerUUID: UUID, dimension: String?): Map<UUID, GraveData> {
         val sql = if (dimension == null)
             "SELECT * FROM graves WHERE ownerUuid = ? AND deletedAt IS NULL"

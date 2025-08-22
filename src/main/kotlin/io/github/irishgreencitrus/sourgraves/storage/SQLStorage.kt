@@ -15,4 +15,9 @@ abstract class SQLStorage : GraveStorage() {
             write(uuid, data)
         }
     }
+
+    /**
+     * All SQL Storages must support soft deletion.
+     */
+    override fun supportsSoftDelete(): Boolean = true
 }
