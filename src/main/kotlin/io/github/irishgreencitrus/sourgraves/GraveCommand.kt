@@ -40,12 +40,10 @@ object GraveCommand {
                     it.sender.hasPermission("sourgraves.admin.server")
                 }
             }
-            literal("config") {
-                literal("reload") {
-                    does {
-                        SourGraves.plugin.loadConfig()
-                        it.source.sender.sendMessage(Component.text("Loaded config from disk!"))
-                    }
+            literal("reload") {
+                does {
+                    SourGraves.plugin.loadConfig()
+                    it.source.sender.sendMessage(Component.text("Loaded config from disk!"))
                 }
                 requires {
                     it.sender.hasPermission("sourgraves.admin.server")
