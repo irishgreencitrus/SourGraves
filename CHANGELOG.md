@@ -1,4 +1,14 @@
+# Release 2.4.0
+
+- Fix give by grave uuid not working
+- Add `undelete` support, where you can restore a grave back when soft deletion is enabled
+- Move `/sourgraves config reload` to `/sourgraves reload`
+- Fix critical issue with 2.3.0 (sorry once again)
+
 # Release 2.3.0
+
+> **DO NOT USE THIS RELEASE**: IT HAS A CRITICAL ISSUE WHERE GRAVES ARE NOT RESTORED
+> Because of this, the official GitHub and Modrinth release for this version has been deleted.
 
 Bug fixes related to grave restoration, especially chest access:
 
